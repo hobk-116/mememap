@@ -1,0 +1,6 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+mememap.sqlite3
+mememap.sqlite3-shm
+mememap.sqlite3-wal

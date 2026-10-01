@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f6f4ef">
+  <meta name="description" content="Khám phá và ghim những câu chuyện vui trên bản đồ Hà Nội."><title>MemeMap — Bản đồ Hà Nội</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <style>
+    :root{--ink:#20221f;--muted:#777a71;--paper:#f6f4ef;--card:#fffefa;--line:#deddd5;--lime:#d8f36a;--coral:#ff705e;--sans:'Space Grotesk',sans-serif;--mono:'DM Mono',monospace}*{box-sizing:border-box}html,body{height:100%;margin:0}body{font-family:var(--sans);color:var(--ink);background:var(--paper);overflow:hidden}button,input,textarea{font:inherit}button{cursor:pointer}.top{height:66px;position:absolute;z-index:600;top:14px;left:14px;right:14px;display:flex;align-items:center;justify-content:space-between;pointer-events:none}.brand,.top-actions{pointer-events:auto;display:flex;align-items:center;gap:10px}.brand{height:48px;padding:0 15px 0 9px;background:var(--card);border:1px solid var(--line);border-radius:999px;color:var(--ink);text-decoration:none;font-size:18px;font-weight:700;letter-spacing:-.06em;box-shadow:0 5px 20px #20221f15}.mark{width:30px;height:30px;display:grid;place-items:center;border-radius:50%;background:var(--lime)}.top-btn,.lang{height:44px;border-radius:999px;padding:0 16px;border:1px solid var(--line);background:var(--card);color:var(--ink);box-shadow:0 5px 20px #20221f15;font-size:12px;font-weight:600}.top-btn.primary{background:var(--ink);color:white;border-color:var(--ink)}.lang{font:11px var(--mono)}#map{position:absolute;inset:0;background:#e7ebdf}.leaflet-control-attribution{font-size:9px!important}.panel{position:absolute;z-index:500;top:91px;left:14px;bottom:14px;width:min(365px,calc(100vw - 28px));display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 15px 50px #20221f22;overflow:hidden;transition:transform .25s ease,opacity .2s,height .25s ease}.panel.closed{transform:translateX(calc(-100% - 25px));opacity:0;pointer-events:none}.panel-head{padding:22px 21px 17px;border-bottom:1px solid var(--line)}.eyebrow{font:10px var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}.panel-head h1{margin:9px 0 6px;font-size:26px;line-height:1;letter-spacing:-.07em}.panel-head p{margin:0;color:var(--muted);font-size:12px;line-height:1.55}.tools{display:flex;gap:8px;margin-top:16px}.search{min-width:0;flex:1;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:12px;outline:none}.search:focus{border-color:#a4bb60}.icon-btn{width:40px;flex:none;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:16px}.list-head{display:flex;justify-content:space-between;padding:16px 21px 8px;color:var(--muted);font:10px var(--mono);text-transform:uppercase;letter-spacing:.08em}.list{overflow:auto;padding:0 13px 12px}.empty{padding:28px 9px;color:var(--muted);text-align:center;font-size:13px;line-height:1.6}.pin-row{display:flex;align-items:center;gap:11px;width:100%;padding:11px 8px;border:0;border-bottom:1px solid #eeede6;background:transparent;text-align:left;color:var(--ink)}.pin-emoji{width:39px;height:39px;flex:none;border-radius:12px;background:#f0efe8;display:grid;place-items:center;font-size:20px}.pin-row strong{display:block;font-size:13px}.pin-row small{color:var(--muted);font-size:11px}.panel-bottom{margin-top:auto;padding:13px;border-top:1px solid var(--line);display:flex;gap:9px}.panel-bottom button{flex:1;padding:12px 8px;border:0;border-radius:11px;background:var(--ink);color:white;font-size:12px;font-weight:600}.panel-bottom .secondary{background:#eeede6;color:var(--ink)}.toggle{position:absolute;z-index:510;left:14px;top:94px;width:auto;min-width:45px;height:45px;padding:0 13px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);border-radius:13px;background:var(--card);box-shadow:0 5px 20px #20221f1a;font-size:14px;font-weight:600;transition:left .25s}.toggle.panel-open{left:390px}.map-hint{position:absolute;z-index:450;bottom:20px;left:50%;transform:translateX(-50%);padding:11px 16px;border:1px solid var(--line);border-radius:999px;background:var(--card);box-shadow:0 5px 20px #20221f18;color:#5d6057;font-size:12px;white-space:nowrap;pointer-events:none}.modal-bg{display:none;position:fixed;z-index:1000;inset:0;padding:18px;align-items:center;justify-content:center;background:#171814a8}.modal-bg.open{display:flex}.modal{width:min(470px,100%);max-height:90vh;overflow:auto;padding:25px;border-radius:20px;background:var(--card);box-shadow:0 24px 80px #0004}.modal-top{display:flex;align-items:start;justify-content:space-between;margin-bottom:19px}.modal h2{margin:0;font-size:24px;letter-spacing:-.06em}.modal-top p{margin:5px 0 0;color:var(--muted);font-size:12px}.close{width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:transparent;font-size:20px}.field{margin:13px 0}.field label{display:block;margin-bottom:6px;font-size:12px;font-weight:600}.field input,.field textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;outline:none}.field textarea{min-height:74px;resize:vertical}.preview{display:none;max-height:140px;max-width:100%;margin-top:7px;border-radius:8px}.error{min-height:18px;color:#c04438;font-size:12px}.submit-row{display:flex;justify-content:end;gap:8px;margin-top:14px}.submit-row button{padding:11px 15px;border:1px solid var(--line);border-radius:999px;background:transparent}.submit-row .save{background:var(--ink);color:white;border-color:var(--ink)}.popup-img{width:100%;height:110px;object-fit:cover;border-radius:7px;margin-bottom:7px}.leaflet-popup-content-wrapper{border-radius:12px}
+    @media(max-width:600px){.top{top:8px;left:8px;right:8px;height:54px}.brand{height:42px;font-size:16px}.mark{width:26px;height:26px}.top-btn,.lang{height:39px;padding:0 11px;font-size:11px}.top-actions{gap:6px}.panel{top:auto;left:8px;right:8px;bottom:8px;width:auto;height:min(76vh,640px);border-radius:18px}.panel.mobile-collapsed{height:230px}.panel.mobile-expanded{height:min(76vh,640px)}.panel.dragging{transition:none!important}.panel.closed{transform:translateY(calc(100% + 20px))}.panel::before{content:"";position:absolute;z-index:2;top:7px;left:50%;width:36px;height:4px;transform:translateX(-50%);border-radius:4px;background:#b9b9ae}.panel-head{padding:20px 16px 12px}.panel-head h1{font-size:22px}.panel-head p{font-size:11px}.tools{margin-top:11px}.list-head{padding:12px 16px 6px}.list{padding:0 10px 8px;flex:1;min-height:0}.panel-bottom{padding:9px}.toggle{left:8px;right:auto;top:auto;bottom:auto;width:auto;min-width:42px;height:42px;padding:0 11px;transition:top .25s ease,left .25s ease}.toggle.panel-open{left:8px;right:auto}.leaflet-top.leaflet-right{top:64px;right:8px}.map-hint{bottom:calc(min(76vh,640px) + 20px);max-width:calc(100vw - 32px);font-size:11px}.panel.mobile-collapsed~.map-hint{bottom:250px}.panel.closed~.map-hint{bottom:19px}}
+    @media(max-width:600px){body:has(.panel.dragging) .toggle{transition:none!important}}
+  </style>
+  <style>
+    .quick-guide{display:none;position:fixed;z-index:1000;inset:0;padding:18px;align-items:center;justify-content:center;background:#171814a8}.quick-guide.open{display:flex}.quick-guide-card{width:min(470px,100%);max-height:90vh;overflow:auto;padding:25px;border:1px solid var(--line);border-radius:20px;background:var(--card);box-shadow:0 24px 80px #0004}.quick-guide-head{display:flex;align-items:start;justify-content:space-between;margin-bottom:18px}.quick-guide h2{margin:0;font-size:23px;letter-spacing:-.06em}.quick-guide p{margin:5px 0 0;color:var(--muted);font-size:12px;line-height:1.55}.quick-guide-close{width:32px;height:32px;border:1px solid var(--line);border-radius:50%;background:transparent}.quick-step{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:13px 0;border-top:1px solid var(--line)}.quick-step b{width:27px;height:27px;display:grid;place-items:center;border-radius:50%;background:var(--lime);font:10px var(--mono)}.quick-step strong{font-size:13px}.quick-step span{display:block;margin-top:3px;color:var(--muted);font-size:11px;line-height:1.5}
+    #mapMenuContent{display:flex;flex:1;min-height:0;flex-direction:column}.panel.board-open #mapMenuContent{display:none}.leaderboard-view{display:none;flex:1;min-height:0;overflow:auto;padding:21px}.panel.board-open .leaderboard-view{display:block}.leaderboard-view .quick-guide-head{margin-bottom:18px}
+    @media(max-width:600px){.quick-guide-card{padding:19px}.leaderboard-view{padding:16px}}
+  </style>
+  <style>
+    .pin-row{display:block;padding:10px 8px;border-bottom:1px solid #eeede6}.pin-summary{width:100%;display:flex;align-items:center;gap:11px;padding:0;border:0;background:transparent;color:var(--ink);text-align:left}.pin-summary strong{display:block;font-size:13px}.pin-summary small{color:var(--muted);font-size:11px}.aura-controls{display:flex;align-items:center;gap:6px;margin:8px 0 0 50px}.aura-score{margin-right:auto;color:var(--muted);font:10px var(--mono);white-space:nowrap}.vote-button{padding:6px 8px;border:1px solid #dcded3;border-radius:8px;background:#f7f8f2;color:#354326;font-size:10px;font-weight:700;white-space:nowrap}.vote-button:hover:not(:disabled){background:var(--lime);border-color:#c5dd5e}.vote-button.selected{background:var(--lime);border-color:#a6bc4d}.vote-button:disabled{background:#e7e7e2;border-color:#ddd;color:#999;cursor:not-allowed;opacity:.75}.pin-popup .pin-author{margin-top:4px;color:#777;font-size:11px}.pin-popup .popup-story{margin-top:7px;color:#666;font-size:12px}.pin-popup .aura-controls{margin:9px 0 0;gap:5px}.pin-popup .aura-score{font-size:10px}
+    .leaderboard-filter{margin:3px 0 16px}.leaderboard-filter label{display:block;margin-bottom:6px;color:var(--muted);font:10px var(--mono);letter-spacing:.08em;text-transform:uppercase}.leaderboard-filter select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font:13px var(--sans)}.leaderboard-list{display:flex;flex-direction:column}.leader-row{display:grid;grid-template-columns:36px 1fr auto;align-items:center;gap:10px;padding:12px 4px;border-top:1px solid var(--line)}.leader-rank{width:29px;height:29px;display:grid;place-items:center;border-radius:10px;background:#eeede6;font:11px var(--mono)}.leader-row:nth-child(1) .leader-rank{background:var(--lime)}.leader-name{min-width:0}.leader-name strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}.leader-name small{color:var(--muted);font-size:11px}.leader-score{text-align:right;white-space:nowrap}.leader-score strong{display:block;font-size:14px}.leader-score small{color:var(--muted);font-size:10px}.leader-row.you{background:#f5f7ea;border-radius:10px;padding-left:7px;padding-right:7px}
+  </style>
+  <style>
+    .modal-bg{display:flex;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .24s ease,visibility .24s ease;background:#171814a8}.modal-bg.open{opacity:1;visibility:visible;pointer-events:auto}.modal{opacity:0;transform:translateY(12px) scale(.985);transition:opacity .24s ease,transform .24s ease}.modal-bg.open .modal{opacity:1;transform:translateY(0) scale(1)}.fixed-pending-pin{position:absolute;z-index:650;left:0;top:0;width:42px;height:42px;display:grid;place-items:center;border:2px solid #20221f;border-radius:50% 50% 50% 7px;background:var(--lime);box-shadow:0 4px 12px #25251e40;font-size:20px;pointer-events:none;will-change:left,top;transition:left .25s ease,top .25s ease,opacity .25s ease}
+    body:has(.panel.closed) .fixed-pending-pin{opacity:0}body:has(.panel.dragging) .fixed-pending-pin{transition:none!important}
+    .map-hint{border:0;background:var(--ink);color:#fff;box-shadow:0 5px 20px #20221f30;font-weight:600;pointer-events:auto;text-align:center}.map-hint:hover{background:#383a34}.map-hint:active{transform:translateX(-50%) scale(.98)}
+    #mapMenuContent{position:absolute;inset:0;z-index:1;display:flex!important;flex-direction:column;min-height:0;transition:transform .28s ease,opacity .2s ease}#mapMenuContent .list{flex:1;min-height:0;padding-bottom:72px}.leaderboard-view{position:absolute;inset:0;z-index:2;display:flex!important;flex-direction:column;min-height:0;overflow:auto;padding:21px 21px 82px;transform:translateX(100%);opacity:0;visibility:hidden;pointer-events:none;transition:transform .28s ease,opacity .2s ease,visibility 0s linear .28s}.panel.board-open #mapMenuContent{display:flex!important;transform:translateX(-100%);opacity:0;pointer-events:none}.panel.board-open .leaderboard-view{display:flex!important;transform:translateX(0);opacity:1;visibility:visible;pointer-events:auto;transition:transform .28s ease,opacity .2s ease,visibility 0s}.leaderboard-view .leaderboard-list{flex:1}.panel-switch{position:absolute;z-index:4;left:0;right:0;bottom:0;margin:0;padding:13px;border-top:1px solid var(--line);background:var(--card)}.panel-switch button{width:100%}
+    @media(max-width:600px){.leaderboard-view{padding:16px 16px 78px}.panel-switch{padding:9px}}
+  </style>
+</head>
+<body>
+  <div id="map" aria-label="MemeMap of Hanoi"></div>
+  <header class="top"><a class="brand" href="index.html" title="MemeMap"><span class="mark">✳</span> mememap</a><div class="top-actions"><button class="top-btn" id="topGuide" type="button" data-t="guide">Hướng dẫn</button><button class="lang" id="lang" type="button">EN</button></div></header>
+  <button class="toggle panel-open" id="toggle" type="button" aria-label="Đóng menu"><span id="toggleArrow">←</span><span id="toggleLabel"></span></button>
+  <aside class="panel" id="panel"><div id="mapMenuContent"><div class="panel-head"><div class="eyebrow" data-t="eyebrow">Bản đồ cộng đồng · Hà Nội</div><h1 data-t="title">Chuyện quanh đây.</h1><p data-t="desc">Chạm lên bản đồ để xem chuyện vui hoặc chọn một điểm để thêm ghim mới.</p><div class="tools"><input class="search" id="search" type="search" placeholder="Tìm trong các ghim…" aria-label="Search pins"><button class="icon-btn" id="locate" type="button" title="Vị trí của tôi" aria-label="Vị trí của tôi">◎</button></div></div><div class="list-head"><span data-t="listTitle">Ghim trên bản đồ</span><span id="count">00</span></div><div class="list" id="list"></div></div><section class="leaderboard-view" id="leaderboard" aria-labelledby="leaderboardTitle"><div class="quick-guide-head"><div><h2 id="leaderboardTitle" data-t="boardTitle">Memerboard</h2><p data-t="boardDesc">Xếp hạng theo tổng aura nhận được từ các ghim.</p></div><button class="quick-guide-close" id="closeLeaderboard" type="button" aria-label="Close">×</button></div><div class="leaderboard-filter"><label for="cityFilter" data-t="boardCityLabel">Thành phố</label><select id="cityFilter"><option value="hanoi" data-t="cityHanoi">Hà Nội</option></select></div><div class="leaderboard-list" id="leaderboardList"></div></section><div class="panel-bottom panel-switch"><button class="secondary" id="boardSwitchBtn" type="button" data-t="memerboard">Memerboard</button></div></aside>
+  <section class="quick-guide" id="quickGuide" role="dialog" aria-modal="true" aria-labelledby="quickGuideTitle"><div class="quick-guide-card"><div class="quick-guide-head"><div><h2 id="quickGuideTitle" data-t="quickTitle">Hướng dẫn nhanh</h2><p data-t="quickIntro">Thêm câu chuyện lên bản đồ chỉ với vài bước.</p></div><button class="quick-guide-close" id="closeGuide" type="button" aria-label="Close">×</button></div><div class="quick-step"><b>01</b><div><strong data-t="quick1Title">Chọn vị trí</strong><span data-t="quick1Copy">Chạm lên bản đồ để đặt điểm ghim.</span></div></div><div class="quick-step"><b>02</b><div><strong data-t="quick2Title">Thêm ảnh và tên</strong><span data-t="quick2Copy">Viết tiêu đề, thêm ngữ cảnh và chọn ảnh.</span></div></div><div class="quick-step"><b>03</b><div><strong data-t="quick3Title">Ghim câu chuyện</strong><span data-t="quick3Copy">Lưu ghim để xem ngay trên bản đồ.</span></div></div></div></section>
+  <button class="map-hint" id="hint" type="button" data-t="hint">Đặt ghim mới hoặc chạm vào bản đồ</button>
+  <div class="modal-bg" id="modal" role="dialog" aria-modal="true"><form class="modal" id="form"><div class="modal-top"><div><h2 data-t="modalTitle">Thêm một câu chuyện</h2><p id="coords">Chọn vị trí trên bản đồ trước.</p></div><button class="close" id="close" type="button" aria-label="Close">×</button></div><div class="field"><label for="title" data-t="labelTitle">Tên địa điểm / meme</label><input id="title" required maxlength="70" placeholder="Ví dụ: Trà đá cứu deadline"></div><div class="field"><label for="story" data-t="labelStory">Kể thêm một chút</label><textarea id="story" maxlength="240" placeholder="Chuyện gì đã xảy ra ở đây?"></textarea></div><div class="field"><label for="photo" data-t="labelPhoto">Ảnh meme (không bắt buộc)</label><input id="photo" type="file" accept="image/*"><img class="preview" id="preview" alt="Selected image preview"></div><div class="error" id="error"></div><div class="submit-row"><button id="cancel" type="button" data-t="cancel">Hủy</button><button class="save" type="submit" data-t="save">Ghim lên bản đồ ↗</button></div></form></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script>
+    (() => {
+      const words = {
+        vi: {guide:'Hướng dẫn',menu:'Menu',hideMenu:'Đóng menu',showMenu:'Mở menu',add:'+ Thêm ghim',eyebrow:'Bản đồ cộng đồng · Hà Nội',title:'Chuyện quanh đây.',desc:'Chạm lên bản đồ để xem chuyện vui hoặc chọn một điểm để thêm ghim mới.',listTitle:'Ghim trên bản đồ',addPin:'+ Đặt ghim mới',how:'Hướng dẫn nhanh',quickTitle:'Hướng dẫn nhanh',quickIntro:'Thêm câu chuyện lên bản đồ chỉ với vài bước.',quick1Title:'Chọn vị trí',quick1Copy:'Chạm lên bản đồ để đặt điểm ghim.',quick2Title:'Thêm ảnh và tên',quick2Copy:'Viết tiêu đề, thêm ngữ cảnh và chọn ảnh.',quick3Title:'Ghim câu chuyện',quick3Copy:'Lưu ghim để xem ngay trên bản đồ.',hint:'Đặt ghim mới hoặc chạm vào bản đồ',modalTitle:'Thêm một câu chuyện',choose:'Chọn vị trí trên bản đồ trước.',labelTitle:'Tên địa điểm / meme',labelStory:'Kể thêm một chút',labelPhoto:'Ảnh meme (không bắt buộc)',cancel:'Hủy',save:'Ghim lên bản đồ ↗',search:'Tìm trong các ghim…',loc:'Vị trí của tôi',empty:'Chưa có ghim nào. Hãy chọn một điểm trên bản đồ để thêm chuyện đầu tiên.',new:'Ghim mới',needLoc:'Cho phép trình duyệt truy cập vị trí của bạn nhé.',badLoc:'Không lấy được vị trí hiện tại.',required:'Chọn một vị trí trên bản đồ trước nhé.',needTitle:'Thêm tên cho ghim nhé.',large:'Ảnh cần nhỏ hơn 5 MB.',noResults:'Không tìm thấy ghim phù hợp.',aura:'Aura',ownPin:'Bạn không thể vote ghim của mình.',voteError:'Chưa gửi được vote. Hãy thử lại.',pinError:'Chưa lưu được ghim. Hãy thử lại.',outside:'Chỉ có thể ghim trong khu vực Hà Nội.',loading:'Đang tải ghim…',author:'Đăng bởi',memerboard:'Memerboard',boardTitle:'Memerboard',boardDesc:'Xếp hạng theo tổng aura nhận được từ các ghim.',boardCityLabel:'Thành phố',cityHanoi:'Hà Nội',boardLoading:'Đang tải bảng xếp hạng…',boardEmpty:'Chưa có ghim nào ở thành phố này.',boardError:'Chưa tải được bảng xếp hạng.',boardAura:'Aura',boardPins:'ghim',boardYou:'Bạn',boardBack:'← Quay lại'},
+        en: {guide:'Guide',menu:'Menu',hideMenu:'Close menu',showMenu:'Open menu',add:'+ Add a pin',eyebrow:'Community map · Hanoi',title:'Stories nearby.',desc:'Tap the map to explore or choose a spot to add a new pin.',listTitle:'Map pins',addPin:'+ Drop a pin',how:'Quick guide',quickTitle:'Quick guide',quickIntro:'Add a story to the map in a few simple steps.',quick1Title:'Choose a location',quick1Copy:'Tap the map to place your pin.',quick2Title:'Add a photo and title',quick2Copy:'Write a title, add context, and choose a photo.',quick3Title:'Pin your story',quick3Copy:'Save the pin to see it on the map.',hint:'Drop a pin or tap the map',modalTitle:'Add a story',choose:'Choose a spot on the map first.',labelTitle:'Place / meme title',labelStory:'Add a little context',labelPhoto:'Meme image (optional)',cancel:'Cancel',save:'Add to map ↗',search:'Search pins…',loc:'My location',empty:'No pins yet. Choose a spot on the map to add the first story.',new:'New pin',needLoc:'Allow your browser to access your location.',badLoc:'Could not get your current location.',required:'Choose a spot on the map first.',needTitle:'Add a title for your pin.',large:'Please choose an image under 5 MB.',noResults:'No matching pins found.',aura:'Aura',ownPin:'You cannot vote on your own pin.',voteError:'Could not save your vote. Please try again.',pinError:'Could not save the pin. Please try again.',outside:'Pins can only be added within Hanoi.',loading:'Loading pins…',author:'Posted by',memerboard:'Memerboard',boardTitle:'Memerboard',boardDesc:'Ranked by total aura received across pins.',boardCityLabel:'City',cityHanoi:'Hanoi',boardLoading:'Loading the leaderboard…',boardEmpty:'No pins in this city yet.',boardError:'Could not load the leaderboard.',boardAura:'Aura',boardPins:'pins',boardYou:'You',boardBack:'← Back'}
+      };
+      let lang = localStorage.getItem('mememap-language') || 'vi';
+      let selected = null;
+      let pendingMarker = null;
+      let pendingMarkerPoint = null;
+      let pendingAnchor = null;
+      let menuPanInProgress = false;
+      let image = '';
+      let pins = [];
+      let leaderboardRows = null;
+      let pinsRevision = 0;
+      let pinsLoading = false;
+      const tr = key => words[lang][key] || words.vi[key];
+      const map = L.map('map', {zoomControl:false,minZoom:11,inertia:true,inertiaDeceleration:5000,inertiaMaxSpeed:1600,easeLinearity:0.25,maxBounds:L.latLngBounds([20.65,105.50],[21.30,106.20]),maxBoundsViscosity:0.9}).setView([20.9893,105.7953],18);
+      const zoomControl = L.control.zoom({position:innerWidth <= 600 ? 'topright' : 'bottomright'}).addTo(map);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+      const markers = L.layerGroup().addTo(map);
+      const panel = document.getElementById('panel');
+      const modal = document.getElementById('modal');
+      const form = document.getElementById('form');
+      const quickGuide = document.getElementById('quickGuide');
+      let mobileViewport = innerWidth <= 600;
+      if (mobileViewport) panel.classList.add('mobile-collapsed');
+      let panelDrag = null;
+      panel.addEventListener('touchstart', event => {
+        if (!mobileViewport || panel.classList.contains('closed') || event.touches.length !== 1) return;
+        const list = document.getElementById('list');
+        if (event.target.closest('#list') && list.scrollTop > 0) return;
+        panelDrag = {startY:event.touches[0].clientY,startHeight:panel.getBoundingClientRect().height,moved:false};
+      }, {passive:true});
+      panel.addEventListener('touchmove', event => {
+        if (!panelDrag || event.touches.length !== 1 || panel.classList.contains('closed')) return;
+        const delta = event.touches[0].clientY - panelDrag.startY;
+        if (Math.abs(delta) < 4 && !panelDrag.moved) return;
+        panelDrag.moved = true;
+        event.preventDefault();
+        panel.classList.add('dragging');
+        const minHeight = 230;
+        const maxHeight = Math.min(innerHeight * .76, 640);
+        const height = Math.max(minHeight, Math.min(maxHeight, panelDrag.startHeight - delta));
+        panel.style.height = `${height}px`;
+        positionMobileToggle(true);
+        alignPinToVisibleMap(false);
+      }, {passive:false});
+      const finishPanelDrag = () => {
+        if (!panelDrag) return;
+        const {moved} = panelDrag;
+        panelDrag = null;
+        if (!moved) return;
+        const height = panel.getBoundingClientRect().height;
+        const expanded = Math.min(innerHeight * .76, 640);
+        panel.classList.remove('dragging');
+        panel.style.height = '';
+        panel.classList.toggle('mobile-expanded', height > (230 + expanded) / 2);
+        positionMobileToggle(true);
+        alignPinToVisibleMap(true);
+      };
+      panel.addEventListener('touchend', finishPanelDrag, {passive:true});
+      panel.addEventListener('touchcancel', finishPanelDrag, {passive:true});
+      const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+      const authRedirect = () => { location.href = '/?login=required'; };
+
+      function applyLanguage() {
+        document.documentElement.lang = lang;
+        document.querySelectorAll('[data-t]').forEach(el => { el.textContent = tr(el.dataset.t); });
+        updateBoardSwitchLabel();
+        document.getElementById('lang').textContent = lang === 'vi' ? 'EN' : 'VI';
+        document.getElementById('search').placeholder = tr('search');
+        document.getElementById('search').setAttribute('aria-label', tr('search'));
+        document.getElementById('locate').title = tr('loc');
+        document.getElementById('locate').setAttribute('aria-label', tr('loc'));
+        renderPins();
+        if (leaderboardRows) renderLeaderboard(leaderboardRows);
+      }
+
+      function voteControls(pin) {
+        const disabled = pin.is_owner ? `disabled title="${escapeHtml(tr('ownPin'))}"` : '';
+        return `<div class="aura-controls"><span class="aura-score">${escapeHtml(tr('aura'))}: <b>${pin.aura}</b></span><button class="vote-button ${pin.viewer_vote === 1 ? 'selected' : ''}" type="button" data-vote="${pin.id}" data-value="1" ${disabled}>+ Aura</button><button class="vote-button ${pin.viewer_vote === -1 ? 'selected' : ''}" type="button" data-vote="${pin.id}" data-value="-1" ${disabled}>− Aura</button></div>`;
+      }
+
+      function pinPopup(pin) {
+        return `<div class="pin-popup">${pin.image ? `<img class="popup-img" src="${pin.image}" alt="">` : ''}<strong>${escapeHtml(pin.title)}</strong><div class="pin-author">${escapeHtml(tr('author'))} @${escapeHtml(pin.username)}</div>${pin.story ? `<div class="popup-story">${escapeHtml(pin.story)}</div>` : ''}${voteControls(pin)}</div>`;
+      }
+
+      function renderPins(preservePopupId = null) {
+        const activePopupId = preservePopupId ?? pins.find(pin => pin.marker && pin.marker.isPopupOpen())?.id ?? null;
+        markers.clearLayers();
+        const query = document.getElementById('search').value.trim().toLocaleLowerCase();
+        const filtered = pins.filter(pin => `${pin.title} ${pin.story} ${pin.username}`.toLocaleLowerCase().includes(query));
+        document.getElementById('count').textContent = String(pins.length).padStart(2, '0');
+        document.getElementById('list').innerHTML = filtered.length ? filtered.map(pin => `<article class="pin-row"><button class="pin-summary" type="button" data-open-pin="${pin.id}"><span class="pin-emoji">${pin.image ? '🖼️' : '📍'}</span><span><strong>${escapeHtml(pin.title)}</strong><small>@${escapeHtml(pin.username)}</small></span></button>${voteControls(pin)}</article>`).join('') : `<div class="empty">${escapeHtml(pins.length ? tr('noResults') : tr('empty'))}</div>`;
+        pins.forEach(pin => {
+          pin.marker = L.marker([pin.lat, pin.lng], {icon:L.divIcon({className:'',html:'<div style="width:40px;height:40px;display:grid;place-items:center;background:#d8f36a;border:2px solid #20221f;border-radius:50% 50% 50% 7px;transform:rotate(-45deg);box-shadow:0 4px 12px #25251e40;font-size:19px"><span style="transform:rotate(45deg)">📍</span></div>',iconSize:[40,40],iconAnchor:[20,38]})}).addTo(markers);
+          pin.marker.bindPopup(pinPopup(pin));
+          if (pin.id === activePopupId) pin.marker.openPopup();
+        });
+      }
+
+      async function loadPins(showLoading = false) {
+        if (pinsLoading) return;
+        pinsLoading = true;
+        const revisionAtStart = pinsRevision;
+        const list = document.getElementById('list');
+        if (showLoading) list.innerHTML = `<div class="empty">${escapeHtml(tr('loading'))}</div>`;
+        try {
+          const response = await fetch('/api/pins', {credentials:'same-origin'});
+          if (response.status === 401) return authRedirect();
+          if (!response.ok) throw new Error('pins');
+          const data = await response.json();
+          if (revisionAtStart === pinsRevision) {
+            const activePopupId = pins.find(pin => pin.marker && pin.marker.isPopupOpen())?.id ?? null;
+            pins = data.pins || [];
+            renderPins(activePopupId);
+          }
+        } catch {
+          if (showLoading) list.innerHTML = `<div class="empty">${escapeHtml(tr('pinError'))}</div>`;
+        } finally {
+          pinsLoading = false;
+        }
+      }
+
+      function renderLeaderboard(rows) {
+        const list = document.getElementById('leaderboardList');
+        if (rows === null) { list.innerHTML = `<div class="empty">${escapeHtml(tr('boardLoading'))}</div>`; return; }
+        if (!rows.length) { list.innerHTML = `<div class="empty">${escapeHtml(tr('boardEmpty'))}</div>`; return; }
+        list.innerHTML = rows.map(row => `<article class="leader-row ${row.is_you ? 'you' : ''}"><span class="leader-rank">${row.rank}</span><span class="leader-name"><strong>${escapeHtml(row.name)}${row.is_you ? ` · ${escapeHtml(tr('boardYou'))}` : ''}</strong><small>@${escapeHtml(row.username)} · ${row.pin_count} ${escapeHtml(tr('boardPins'))}</small></span><span class="leader-score"><strong>${row.aura} ✨</strong><small>${escapeHtml(tr('boardAura'))}</small></span></article>`).join('');
+      }
+
+      async function loadLeaderboard() {
+        leaderboardRows = null;
+        renderLeaderboard(null);
+        try {
+          const city = document.getElementById('cityFilter').value;
+          const response = await fetch(`/api/leaderboard?city=${encodeURIComponent(city)}`, {credentials:'same-origin'});
+          if (response.status === 401) return authRedirect();
+          if (!response.ok) throw new Error('leaderboard');
+          const data = await response.json();
+          leaderboardRows = data.leaders || [];
+          renderLeaderboard(leaderboardRows);
+        } catch {
+          document.getElementById('leaderboardList').innerHTML = `<div class="empty">${escapeHtml(tr('boardError'))}</div>`;
+        }
+      }
+
+      async function sendVote(pinId, value) {
+        try {
+          const response = await fetch(`/api/pins/${pinId}/vote`, {method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({value})});
+          if (response.status === 401) return authRedirect();
+          const data = await response.json();
+          if (!response.ok) {
+            document.getElementById('error').textContent = data.error === 'cannot_vote_own_pin' ? tr('ownPin') : tr('voteError');
+            return;
+          }
+          pinsRevision += 1;
+          const index = pins.findIndex(pin => pin.id === data.pin.id);
+          if (index !== -1) pins[index] = data.pin;
+          renderPins();
+        } catch {
+          document.getElementById('error').textContent = tr('voteError');
+        }
+      }
+
+      function closeModal() {
+        modal.classList.remove('open');
+        selected = null;
+        window.setTimeout(() => {
+          if (!modal.classList.contains('open')) {
+            movePendingMarkerToPoint(visibleMapCenterPoint());
+            pendingAnchor = map.containerPointToLatLng(pendingMarkerPoint);
+          }
+        }, 180);
+      }
+      function setPanel(open) {
+        panel.classList.toggle('closed', !open);
+        document.getElementById('toggle').classList.toggle('panel-open', open);
+        document.getElementById('toggleArrow').textContent = innerWidth <= 600 ? (open ? '↓' : '↑') : (open ? '←' : '→');
+        document.getElementById('toggleLabel').textContent = open ? '' : tr('menu');
+        document.getElementById('toggleLabel').style.display = open ? 'none' : 'inline';
+        document.getElementById('toggle').setAttribute('aria-label', tr(open ? 'hideMenu' : 'showMenu'));
+        positionMobileToggle(open);
+      }
+      function returnToMainMenu() {
+        panel.classList.remove('board-open');
+        updateBoardSwitchLabel();
+      }
+      function updateBoardSwitchLabel() {
+        const button = document.getElementById('boardSwitchBtn');
+        if (button) button.textContent = panel.classList.contains('board-open') ? tr('boardBack') : tr('memerboard');
+      }
+      function positionMobileToggle(open = !panel.classList.contains('closed')) {
+        const toggle = document.getElementById('toggle');
+        if (innerWidth > 600) {
+          toggle.style.removeProperty('top');
+          toggle.style.removeProperty('left');
+          toggle.style.removeProperty('right');
+          return;
+        }
+        const sheetHeight = panel.classList.contains('mobile-expanded') ? Math.min(innerHeight * .76, 640) : (panel.classList.contains('mobile-collapsed') ? 230 : Math.min(innerHeight * .76, 640));
+        const sheetTop = panel.classList.contains('dragging') ? panel.getBoundingClientRect().top : innerHeight - 8 - sheetHeight;
+        const top = open ? sheetTop - 48 : innerHeight - 56;
+        toggle.style.top = `${Math.max(8, top)}px`;
+        toggle.style.left = '8px';
+        toggle.style.right = 'auto';
+      }
+      setPanel(!panel.classList.contains('closed'));
+      function requestPin() {
+        if (!selected) {
+          document.getElementById('error').textContent = tr('choose');
+          if (innerWidth < 600) setPanel(true);
+          return;
+        }
+        document.getElementById('error').textContent = '';
+        modal.classList.add('open');
+        document.getElementById('title').focus();
+      }
+
+      function centerOfVisibleMap() {
+        return map.containerPointToLatLng(visibleMapCenterPoint());
+      }
+
+      function visibleMapCenterPoint(panelOpen = !panel.classList.contains('closed')) {
+        const size = map.getSize();
+        let point = L.point(size.x / 2, size.y / 2);
+        if (panelOpen && innerWidth > 600) {
+          const panelRight = Math.min(size.x, 14 + Math.min(365, innerWidth - 28));
+          point.x = (panelRight + size.x) / 2;
+        } else if (panelOpen) {
+          const panelTop = panel.classList.contains('dragging') ? panel.getBoundingClientRect().top : (size.y - 8 - (panel.classList.contains('mobile-expanded') ? Math.min(innerHeight * .76, 640) : (panel.classList.contains('mobile-collapsed') ? 230 : Math.min(innerHeight * .76, 640))));
+          point.y = Math.max(0, panelTop / 2);
+        }
+        return point;
+      }
+
+      function setPendingLocation(latlng) {
+        selected = L.latLng(latlng.lat, latlng.lng);
+        document.getElementById('coords').textContent = `${selected.lat.toFixed(5)}, ${selected.lng.toFixed(5)}`;
+        document.getElementById('error').textContent = '';
+        positionPendingMarker(selected);
+      }
+
+      function positionPendingMarker(latlng) {
+        pendingAnchor = L.latLng(latlng.lat, latlng.lng);
+        movePendingMarkerToPoint(map.latLngToContainerPoint(pendingAnchor));
+      }
+
+      function movePendingMarkerToPoint(point) {
+        pendingMarkerPoint = L.point(point);
+        if (!pendingMarker) {
+          pendingMarker = document.createElement('div');
+          pendingMarker.className = 'fixed-pending-pin';
+          pendingMarker.textContent = '＋';
+          pendingMarker.setAttribute('aria-hidden', 'true');
+          map.getContainer().appendChild(pendingMarker);
+        }
+        pendingMarker.style.left = `${pendingMarkerPoint.x - 21}px`;
+        pendingMarker.style.top = `${pendingMarkerPoint.y - 40}px`;
+      }
+
+      function alignPinToVisibleMap(animate = true) {
+        if (modal.classList.contains('open') || !pendingAnchor) return;
+        const target = visibleMapCenterPoint();
+        const anchorPoint = map.latLngToContainerPoint(pendingAnchor);
+        menuPanInProgress = true;
+        movePendingMarkerToPoint(target);
+        map.panBy(anchorPoint.subtract(target), {animate, duration:.25});
+        if (animate) window.setTimeout(() => {
+          pendingAnchor = map.containerPointToLatLng(pendingMarkerPoint);
+          menuPanInProgress = false;
+        }, 300);
+        else {
+          pendingAnchor = map.containerPointToLatLng(pendingMarkerPoint);
+          menuPanInProgress = false;
+        }
+      }
+
+      function startPinAtVisibleCenter() {
+        setPendingLocation(centerOfVisibleMap());
+        requestPin();
+      }
+
+      let resizeFrame = 0;
+      window.addEventListener('resize', () => {
+        cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
+          const nowMobile = innerWidth <= 600;
+          if (nowMobile !== mobileViewport) {
+            mobileViewport = nowMobile;
+            panel.classList.toggle('mobile-collapsed', nowMobile);
+            if (!nowMobile) panel.classList.remove('mobile-expanded');
+            zoomControl.setPosition(nowMobile ? 'topright' : 'bottomright');
+            setPanel(!panel.classList.contains('closed'));
+          }
+          positionMobileToggle(!panel.classList.contains('closed'));
+          map.invalidateSize({pan:false});
+          if (modal.classList.contains('open') && selected) {
+            movePendingMarkerToPoint(map.latLngToContainerPoint(selected));
+            return;
+          }
+          const target = visibleMapCenterPoint();
+          const anchorPoint = pendingAnchor ? map.latLngToContainerPoint(pendingAnchor) : target;
+          movePendingMarkerToPoint(target);
+          if (pendingAnchor) {
+            menuPanInProgress = true;
+            map.panBy(anchorPoint.subtract(target), {animate:true, duration:.25});
+            window.setTimeout(() => {
+              pendingAnchor = map.containerPointToLatLng(pendingMarkerPoint);
+              menuPanInProgress = false;
+            }, 300);
+          }
+        });
+      });
+
+      movePendingMarkerToPoint(visibleMapCenterPoint());
+      pendingAnchor = map.containerPointToLatLng(pendingMarkerPoint);
+      map.on('move zoomend', () => {
+        if (!modal.classList.contains('open') && !menuPanInProgress) {
+          pendingAnchor = map.containerPointToLatLng(pendingMarkerPoint);
+        }
+      });
+      applyLanguage();
+      loadPins(true);
+      window.setInterval(() => {
+        if (!document.hidden) { loadPins(); if (panel.classList.contains('board-open')) loadLeaderboard(); }
+      }, 10_000);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) loadPins();
+      });
+      map.on('click', event => {
+        setPendingLocation(event.latlng);
+        requestPin();
+      });
+      document.getElementById('lang').onclick = () => {
+        lang = lang === 'vi' ? 'en' : 'vi';
+        localStorage.setItem('mememap-language', lang);
+        applyLanguage();
+      };
+      document.getElementById('toggle').onclick = () => {
+        const opening = panel.classList.contains('closed');
+        setPanel(opening);
+        alignPinToVisibleMap();
+      };
+      document.getElementById('hint').onclick = startPinAtVisibleCenter;
+      document.getElementById('topGuide').onclick = () => { returnToMainMenu(); quickGuide.classList.add('open'); };
+      document.getElementById('closeGuide').onclick = () => quickGuide.classList.remove('open');
+      quickGuide.onclick = event => { if (event.target === quickGuide) quickGuide.classList.remove('open'); };
+      document.getElementById('boardSwitchBtn').onclick = () => {
+        if (panel.classList.contains('board-open')) returnToMainMenu();
+        else { quickGuide.classList.remove('open'); panel.classList.add('board-open'); updateBoardSwitchLabel(); loadLeaderboard(); }
+      };
+      document.getElementById('closeLeaderboard').onclick = returnToMainMenu;
+      document.getElementById('cityFilter').onchange = loadLeaderboard;
+      document.getElementById('search').oninput = renderPins;
+      document.getElementById('list').addEventListener('click', event => {
+        const voteButton = event.target.closest('[data-vote]');
+        if (voteButton) { event.preventDefault(); event.stopPropagation(); sendVote(Number(voteButton.dataset.vote), Number(voteButton.dataset.value)); return; }
+        const pinButton = event.target.closest('[data-open-pin]');
+        if (pinButton) { const pin = pins.find(item => item.id === Number(pinButton.dataset.openPin)); if (pin) { map.setView([pin.lat, pin.lng], 18); pin.marker.openPopup(); } }
+      });
+      map.on('popupopen', event => {
+        event.popup.getElement().querySelectorAll('[data-vote]').forEach(button => button.addEventListener('click', click => {
+          click.preventDefault(); click.stopPropagation(); sendVote(Number(button.dataset.vote), Number(button.dataset.value));
+        }));
+      });
+      document.getElementById('close').onclick = closeModal;
+      document.getElementById('cancel').onclick = closeModal;
+      modal.onclick = event => { if (event.target === modal) closeModal(); };
+      document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeModal(); quickGuide.classList.remove('open'); returnToMainMenu(); } });
+      document.getElementById('locate').onclick = () => {
+        if (!navigator.geolocation) { document.getElementById('error').textContent = tr('badLoc'); return; }
+        navigator.geolocation.getCurrentPosition(position => {
+          const point = [position.coords.latitude, position.coords.longitude];
+          map.setView(point, 18); setPendingLocation(L.latLng(point[0], point[1]));
+          document.getElementById('coords').textContent = tr('loc'); requestPin();
+        }, () => { document.getElementById('error').textContent = tr('needLoc'); }, {enableHighAccuracy:true,timeout:12000});
+      };
+      document.getElementById('photo').onchange = event => {
+        const file = event.target.files[0];
+        if (!file) { image = ''; return; }
+        if (file.size > 5 * 1024 * 1024 || !file.type.startsWith('image/')) { event.target.value = ''; document.getElementById('error').textContent = tr('large'); return; }
+        const reader = new FileReader();
+        reader.onload = () => { image = reader.result; const preview = document.getElementById('preview'); preview.src = image; preview.style.display = 'block'; };
+        reader.readAsDataURL(file);
+      };
+      form.onsubmit = async event => {
+        event.preventDefault();
+        if (!selected) { document.getElementById('error').textContent = tr('required'); return; }
+        const title = document.getElementById('title').value.trim();
+        if (!title) { document.getElementById('error').textContent = tr('needTitle'); return; }
+        const save = form.querySelector('[type="submit"]'); save.disabled = true;
+        try {
+          const response = await fetch('/api/pins', {method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({lat:selected.lat,lng:selected.lng,title,story:document.getElementById('story').value.trim(),image})});
+          if (response.status === 401) return authRedirect();
+          const data = await response.json();
+          if (!response.ok) { document.getElementById('error').textContent = data.error === 'outside_hanoi' ? tr('outside') : tr('pinError'); return; }
+          pinsRevision += 1; pins.unshift(data.pin); renderPins(); closeModal(); form.reset(); image=''; document.getElementById('preview').style.display='none'; selected=null;
+          map.setView([data.pin.lat,data.pin.lng],18);
+          data.pin.marker.openPopup();
+        } catch { document.getElementById('error').textContent = tr('pinError'); }
+        finally { save.disabled = false; }
+      };
+      setTimeout(() => map.invalidateSize(), 180);
+    })();
+  </script>
+</body>
+</html>
