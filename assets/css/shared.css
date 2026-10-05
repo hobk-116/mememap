@@ -1,0 +1,228 @@
+/* Shared typography, popup motion and profile components. */
+:root {
+  --ink:#20221f;
+  --muted:#777a71;
+  --paper:#f6f4ef;
+  --card:#fffefa;
+  --line:#deddd5;
+  --lime:#d8f36a;
+  --coral:#ff705e;
+  --sans:'Nunito',sans-serif;
+  --mono:'DM Mono',monospace
+}
+
+@media(max-width:600px) {
+  button,a,input,select,textarea,.top,.drawer-toggle-group,.toggle,.map-hint,
+  .popup-overlay,.popup-card,.leaflet-popup {
+    touch-action:manipulation
+  }
+}
+
+.popup-overlay {
+  display:flex;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .24s ease,visibility .24s ease;
+  background:#171814a8
+}
+
+.popup-overlay.open {
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto
+}
+
+.popup-card {
+  opacity:0;
+  transform:translateY(12px) scale(.985);
+  transition:opacity .24s ease,transform .24s ease
+}
+
+.popup-overlay.open .popup-card {
+  opacity:1;
+  transform:translateY(0) scale(1)
+}
+
+.profile-trigger {
+  width:42px;
+  height:42px;
+  flex:none;
+  padding:3px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:50%;
+  background:var(--card);
+  box-shadow:0 4px 16px #20221f18
+}
+
+.profile-trigger img {
+  display:block;
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  object-fit:cover
+}
+
+.profile-overlay {
+  position:fixed;
+  inset:0;
+  z-index:1500;
+  align-items:center;
+  justify-content:center;
+  padding:18px
+}
+
+.profile-card {
+  position:relative;
+  width:min(360px,100%);
+  padding:28px 22px 23px;
+  border:1px solid var(--line);
+  border-radius:20px;
+  background:var(--card);
+  box-shadow:0 24px 80px #0004;
+  text-align:center
+}
+
+.profile-close {
+  position:absolute;
+  top:12px;
+  right:12px;
+  width:32px;
+  height:32px;
+  padding:0;
+  border:1px solid var(--line);
+  border-radius:50%;
+  background:transparent;
+  color:var(--ink);
+  font-size:20px
+}
+
+.profile-avatar-button[hidden] {
+  display:none!important
+}
+
+.profile-avatar-button:disabled {
+  cursor:default
+}
+
+.profile-avatar-button:disabled .profile-avatar-edit {
+  display:none
+}
+
+.profile-avatar-button:disabled:hover .profile-avatar-edit {
+  transform:none
+}
+
+.profile-avatar-button {
+  position:relative;
+  width:80px;
+  height:80px;
+  display:block;
+  margin:4px auto 14px;
+  padding:2px!important;
+  border:0!important;
+  border-radius:50%!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  cursor:pointer
+}
+
+.profile-avatar-button:hover .profile-avatar-edit {
+  transform:scale(1.08)
+}
+
+.profile-avatar {
+  width:76px;
+  height:76px;
+  display:block;
+  border:2px solid var(--line);
+  border-radius:50%;
+  object-fit:cover
+}
+
+.profile-avatar-edit {
+  position:absolute;
+  right:0;
+  bottom:0;
+  width:25px;
+  height:25px;
+  display:grid;
+  place-items:center;
+  border:2px solid var(--card);
+  border-radius:50%;
+  background:var(--ink);
+  color:#fff;
+  font-size:13px;
+  line-height:1;
+  transition:transform .15s
+}
+
+.profile-avatar-input {
+  display:none
+}
+
+.profile-name {
+  display:block;
+  font-size:20px;
+  letter-spacing:-.04em
+}
+
+.profile-username {
+  display:block;
+  margin-top:4px;
+  color:var(--muted);
+  font:12px var(--mono)
+}
+
+.profile-location {
+  display:block;
+  margin-top:15px;
+  color:var(--muted);
+  font-size:12px
+}
+
+.profile-stats {
+  margin:20px auto 0;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#f7f8f2;
+  color:var(--ink);
+  font:600 13px var(--mono)
+}
+
+.profile-logout {
+  display:none;
+  width:100%;
+  margin:14px 0 0;
+  padding:13px 0 0;
+  border:0;
+  border-top:1px solid var(--line);
+  border-radius:0;
+  background:transparent;
+  color:#b14336;
+  font:600 13px var(--sans);
+  cursor:pointer
+}
+
+.profile-overlay.own-profile-view .profile-logout {
+  display:block
+}
+
+.profile-logout:hover:not(:disabled) {
+  text-decoration:underline;
+  text-underline-offset:3px
+}
+
+.profile-logout:disabled {
+  opacity:.5;
+  cursor:default
+}
+
+.profile-logout:focus-visible {
+  outline:2px solid var(--ink);
+  outline-offset:3px
+}

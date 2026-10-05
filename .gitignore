@@ -1,6 +1,28 @@
+# macOS and Python cache
 .DS_Store
 __pycache__/
 *.py[cod]
-mememap.sqlite3
-mememap.sqlite3-shm
-mememap.sqlite3-wal
+
+# Local environment and secrets (keep a sanitized template trackable)
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+
+# SQLite runtime data and sidecars, including custom SQLite filenames
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite-journal
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+*.sqlite3-journal
+uploads/
+/backups/
+
+# Node.js / Next.js dependencies and generated output
+node_modules/
+.next/
+/out/
