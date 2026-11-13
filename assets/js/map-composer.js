@@ -1,6 +1,6 @@
 /* Feature controller; composed by map.js. */
 (() => {
-  function createMapComposer({map, layout, api, tr, restrictionMessage, onCreated, onFocus}) {
+  function createMapComposer({map, defaultZoom, layout, api, tr, restrictionMessage, onCreated, onFocus}) {
     let selected = null, image = '', imageTask = null, imageRevision = 0;
     const modal = document.getElementById('modal');
     const form = document.getElementById('form');
@@ -22,7 +22,7 @@
     }
 
     function setPendingLocation(latlng) {
-      selected = L.latLng(latlng.lat, latlng.lng);
+      selected = {lat: latlng.lat, lng: latlng.lng};
       document.getElementById('coords').textContent = `${selected.lat.toFixed(5)}, ${selected.lng.toFixed(5)}`;
       document.getElementById('error').textContent = '';
       layout.select(selected);
@@ -32,7 +32,7 @@
       requestPin();
     }
 
-    map.on('click', event => { setPendingLocation(event.latlng); requestPin(); });
+    map.on('click', event => { setPendingLocation(event.lngLat); requestPin(); });
     document.getElementById('hint').onclick = startPinAtVisibleCenter;
     document.getElementById('close').onclick = closeModal;
     document.getElementById('cancel').onclick = closeModal;
@@ -41,7 +41,7 @@
       if (!navigator.geolocation) { document.getElementById('error').textContent = tr('badLoc'); return; }
       navigator.geolocation.getCurrentPosition(position => {
         const point = [position.coords.latitude, position.coords.longitude];
-        map.setView(point, 18); setPendingLocation(L.latLng(point[0], point[1]));
+        map.jumpTo({center: [point[1], point[0]], zoom: defaultZoom}); setPendingLocation({lat: point[0], lng: point[1]});
         document.getElementById('coords').textContent = tr('loc'); requestPin();
       }, () => { document.getElementById('error').textContent = tr('needLoc'); }, {enableHighAccuracy:true,timeout:12000});
     };
@@ -78,7 +78,7 @@
       const title = document.getElementById('title').value.trim();
       if (!title) { document.getElementById('error').textContent = tr('needTitle'); return; }
       const save = form.querySelector('[type="submit"]'); save.disabled = true;
-      const location = L.latLng(selected);
+      const location = {...selected};
       const revision = imageRevision;
       try {
         if (imageTask) await imageTask;
@@ -91,7 +91,7 @@
         onCreated(data.pin);
         closeModal(); form.reset(); image = ''; imageTask = null; imageRevision++;
         document.getElementById('preview').style.display = 'none';
-        map.setView([data.pin.lat, data.pin.lng], 18);
+        map.jumpTo({center: [data.pin.lng, data.pin.lat], zoom: defaultZoom});
         onFocus(data.pin.id);
       } catch (error) {
         if (MemeMap.isSessionError(error)) return;

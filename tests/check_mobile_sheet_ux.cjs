@@ -1,3 +1,4 @@
+const {mockMapStyle} = require('./map_fixture.cjs');
 /* Mobile sheet flows, real touch gestures, and simulated keyboard viewport changes. */
 const {chromium} = require('playwright');
 const assert = require('node:assert/strict');
@@ -12,7 +13,7 @@ const path = require('node:path');
   try {
     for (const viewport of [{width:390,height:844},{width:360,height:740}]) {
       const context = await browser.newContext({viewport,hasTouch:true,isMobile:true});
-      await context.route('https://tile.openstreetmap.org/**', route => route.abort());
+      await mockMapStyle(context);
       await context.route('**/assets/js/map-layout.js', route => route.fulfill({contentType:'text/javascript',body:
         fs.readFileSync(path.join(__dirname,'../assets/js/map-layout.js'),'utf8') +
         '\nconst originalLayout=MemeMap.createMapLayout;MemeMap.createMapLayout=options=>{window.testMap=options.map;return originalLayout(options);};'}));
@@ -31,7 +32,7 @@ const path = require('node:path');
       const page = await context.newPage(), errors = [], assetFailures = [];
       page.on('pageerror', error => errors.push(error.message));
       page.on('requestfailed', request => {
-        if (!request.url().includes('tile.openstreetmap.org')) assetFailures.push({url:request.url(),error:request.failure()?.errorText});
+        if (!request.url().includes('tiles.openfreemap.org')) assetFailures.push({url:request.url(),error:request.failure()?.errorText});
       });
       await page.goto(base+'/landing.html');
       await page.locator('#adminToggle:not([hidden])').waitFor().catch(error => {
@@ -106,8 +107,8 @@ const path = require('node:path');
       await page.locator('[data-vote="1"][data-value="1"].selected').waitFor();
       await expanded('#panel');
       await page.locator('[data-open-pin="1"]').tap(); await settle(); await collapsed('#panel');
-      assert.equal(await page.locator('.leaflet-popup .pin-popup strong').textContent(),'Fixture pin');
-      await page.evaluate(()=>testMap.closePopup());
+      assert.equal(await page.locator('.maplibregl-popup .pin-popup strong').textContent(),'Fixture pin');
+      await page.evaluate(()=>document.querySelector('.maplibregl-popup-close-button')?.click());
 
       await page.locator('#adminToggle').tap(); await settle(); await collapsed('#adminPanel');
       await page.locator('#adminBody[aria-busy="false"]').waitFor();

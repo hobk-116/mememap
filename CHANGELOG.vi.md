@@ -6,6 +6,44 @@ Nhật ký này ghi các thay đổi dự án đã hoàn thành. `Unreleased` ng
 
 ## Unreleased
 
+### 11/10/2026
+
+#### Added - Thêm
+
+- Dựng lại frontend/CSS hiện tại thành [bản thiết kế UI MemeMap có thể chỉnh sửa trên Figma](https://www.figma.com/design/G626nedcgIaChFIE61IZaA): tách trang Landing, Map và Components, bố cục desktop/mobile cùng các trạng thái mobile Menu, Nông trại hào quang và bảng thu nhỏ. File có biến màu/khoảng cách dùng chung, kiểu chữ Nunito/DM Mono, auto layout, component tái sử dụng và liên kết prototype mobile trong cùng trang. Nền bản đồ là tài nguyên ảnh riêng; nút điều khiển và nội dung vẫn chỉnh sửa được. Dùng dữ liệu preview tạm và đã xem bản thiết kế xuất ra. Đợt sửa repo ở cấp L0, chỉ ghi liên kết thiết kế bên ngoài; mã nguồn và hành vi ứng dụng không đổi, nên không cần và không chạy các bộ kiểm tra ứng dụng.
+
+### 07/10/2026
+
+#### Changed — Thay đổi
+
+- Ghim cố định và ghim đỏ hiện khi chạm bản đồ lúc đã tắt bảng (`.fixed-pending-pin`, `.interactive-pending-pin`) nay dùng đỏ đậm `#d62f1f` thay cho san hô nhạt `--coral`; `--coral` giữ nguyên cho các nơi khác. Hoàn tất L1 ở module bố cục bản đồ (chỉ CSS); cập nhật `docs/en|vi/ARCHITECTURE.md`. Kiểm chứng: chạy `python3 tests/run_browser.py check_interactive_pin.cjs check_map_layers.cjs check_browser.cjs` với `NODE_PATH` bên ngoài và Chrome có sẵn qua `MEMEMAP_TEST_BROWSER`: cả ba bộ đạt trên dữ liệu tạm (lần chạy trước khi chưa đặt các biến này thất bại với `Cannot find module 'playwright'`). Không cần và không chạy các bộ backend/API. Chưa xem riêng ảnh desktop/mobile, test không kiểm tra màu và chưa xác minh trên iOS/Android thật.
+
+### 07/10/2026
+
+#### Fixed
+
+- Nút đặt ghim và dòng nguồn bản đồ trên mobile bám theo mép bảng thực tế khi kéo, tự về mức và chuyển Nông trại hào quang, tránh chồng lấp hoặc khoảng trống quá lớn trong chuyển động. Bổ sung kiểm tra hồi quy có dòng nguồn; giữ cơ chế neo địa lý của ghim. Hoàn tất L2 trong module bố cục bản đồ; kiểm tra được chọn ở L2 đã đạt. Chạy `python3 tests/run_browser.py check_mobile_sheet_motion.cjs check_mobile_drawers.cjs check_mobile_levels.cjs check_mobile_sheet_ux.cjs check_interactive_pin.cjs check_pin_zoom.cjs check_map_layers.cjs` qua hai lần gọi, với `NODE_PATH` bên ngoài và Chrome có sẵn qua `MEMEMAP_TEST_BROWSER`: cả bảy bộ đạt trên dữ liệu tạm. Xem ảnh desktop/mobile, kiểm tra cú pháp JavaScript và `git diff --check`. Kiểm tra hồi quy chuyển động thất bại khi chỉ cấp logic trước bản sửa cho trình duyệt thử và đạt với bản sửa. Lần chạy đầu cần quyền localhost ngoài sandbox và chỉ định trình duyệt có sẵn; một lần thử chuyển động cho thấy khác biệt giữa đo tại animation frame và trước khi vẽ, nên phép đo footer cũ giữ thời điểm ban đầu, còn phép đo khoảng cách mới chạy sau đồng bộ bố cục. Không đổi hành vi backend/API; không cần và không chạy các bộ backend/API. Chưa xác minh trên iOS/Android thật.
+
+### 07/10/2026
+
+#### Changed — Thay đổi
+
+- Chuyển bản đồ trên nhánh local `codex/maplibre-openfreemap` sang MapLibre GL JS 6.13.0 native (ESM/CSS/worker chốt phiên bản từ unpkg) và style Liberty OpenFreeMap, không thêm framework/bước build. Giữ ghim emoji xanh, ghim đặt vị trí màu san hô, nội dung popup, marker chọn vị trí tạm desktop, neo địa lý khi đổi drawer/sheet, các mức mobile/bộ nhớ cùng cấp/chuyển động Memerboard, tọa độ composer khi đổi viewport, preview Admin và refresh feed. Attribution nằm trên sheet mobile và trong vùng bản đồ còn lại trên desktop; hint chừa chiều cao attribution mà không dời ghim đặt vị trí.
+- Bổ sung `style` vào `/api/map-config` có xác thực; giữ vĩ độ/kinh độ, bounds, zoom và `tiles` cũ. Frontend đổi thứ tự tọa độ tại ranh giới MapLibre và trừ một từ zoom cũ để giữ thang pixel Mercator 256 px với tile thế giới 512 px của MapLibre. Phạm vi đăng ghim/Memerboard, quyền, database và uploads không đổi.
+- Thêm thông báo lỗi bản đồ song ngữ cho module/CSS/style/worker và mất WebGL context, mở marker bằng bàn phím, quản lý một popup và hủy map khi rời trang. Chuyển kiểm tra browser sang tọa độ/selector native, giữ assertion hành vi; thêm `check_maplibre.cjs` và fixture style OpenFreeMap cố định. Đồng bộ README, kiến trúc, API, triển khai, kiểm tra, khuyến nghị và hướng dẫn Git EN/VI, gồm nhánh/remote thực tế và migration chưa commit.
+
+Thay đổi và kiểm chứng: hoàn tất L4 ở map/layout, tạo ghim, feed/popup/vote, preview Admin, thao tác chạm popup dùng chung và cấu hình địa lý bản đồ. Đã chạy `python3 -m unittest discover -s tests -p 'test_*.py' -v` (23 pass), `node tests/test_api_client.cjs` (pass) và `python3 tests/run_browser.py` (cả 12 suite pass qua các lượt toàn bộ và chạy lại liên quan). Lượt layout cuối chọn `check_admin_ui.cjs check_browser.cjs check_interactive_pin.cjs check_map_layers.cjs check_mobile_drawers.cjs check_mobile_levels.cjs check_mobile_sheet_motion.cjs check_mobile_sheet_ux.cjs check_pin_zoom.cjs`; tất cả pass sau đổi vị trí attribution. Chạy lại riêng `check_maplibre.cjs` sau sửa stylesheet rỗng của Chromium khi CSS bị chặn; case lỗi module/CSS/style/worker/WebGL và case bình thường về thang pixel/bàn phím đều pass VI/EN. Các lần migration trước phát hiện khác biệt click/khả năng tiếp cận marker và geometry trong test, đã sửa trước các kết quả pass này. Không lặp backend/API sau sửa chỉ frontend.
+
+Smoke với nhà cung cấp thật `node /private/tmp/mememap_live_smoke.cjs` dùng dữ liệu tạm, tải OpenFreeMap ở viewport Chromium 1280 × 850 và 390 × 844, xác nhận attribution và feature đã render, không có lỗi JavaScript; đã xem screenshot desktop/mobile. Đã đọc lại module/route, rà soát cú pháp JavaScript, liên kết nội bộ, nhất quán EN/VI và `git diff --check`. Test dùng database/uploads tạm; không thử ghi dữ liệu thật. Phạm vi là giả lập Chromium; WebGL/chạm/bàn phím/hiệu năng iOS/Android thật chưa được kiểm tra. File migration chưa stage/commit; chưa push, tag, release hoặc tạo worktree thứ hai. Giữ nguyên sửa đổi AGENTS/guide và `.playwright-cli/` có sẵn.
+
+Gemini 3.1 Pro (`gemini-3.1-pro-high`, chế độ plan Antigravity) thực hiện rà soát nguồn/diff chỉ đọc theo yêu cầu của chủ dự án sau kiểm thử, dựa vào kết quả test agent chính cung cấp; không tự chạy lại các suite ứng dụng. Gemini không nêu lỗi nguồn chặn và lưu ý cập nhật HTML popup đóng thừa. Đã xác nhận/sửa bằng ghi nhớ nội dung theo marker, thêm assertion refresh không đổi và vote đang mở có đổi. Chạy `python3 tests/run_browser.py check_browser.cjs check_admin_ui.cjs check_map_layers.cjs check_pin_zoom.cjs check_foundation_ui.cjs`: browser/Admin/zoom/profile pass; một phép thử overlap layering thất bại. Phép đo và hit-test nay diễn ra trong cùng frame trình duyệt, giữ assertion; chạy lại `python3 tests/run_browser.py check_map_layers.cjs` pass, gồm zoom thật z16→z17. Đã rà soát cú pháp/diff/docs cuối. Lưu ý thiết bị thật của Gemini vẫn chưa kiểm chứng, không phải test thất bại hay phê duyệt release. Diff scratch tạm của Gemini đã được đưa ra ngoài repo.
+
+### 05/10/2026
+
+#### Changed — Thay đổi
+
+- Thêm quy tắc đọc tài liệu theo tác vụ và nguồn xác định yêu cầu vào AGENTS: đối chiếu tài liệu hiện hành/mã nguồn thay vì dùng lịch sử đã bị thay thế; phân biệt hành vi đã triển khai, quyết định đã chốt, đề xuất và quyết định chưa chốt; không giả định truy cập được chat khác. Đồng bộ hướng dẫn tiếng Việt.
+
 ### 04/10/2026
 
 #### Đã sửa
@@ -109,3 +147,9 @@ Nhật ký này không ghi ngày chính xác của các thay đổi trước đ�
 - Type annotation ở các module xác thực, ghim và ảnh liên quan được đánh giá trì hoãn để tránh lỗi toán tử union khi import trên trình thông dịch cũ như đã báo. Điều này không xác nhận hỗ trợ mọi phiên bản Python.
 
 Membership community, quyền local/guest, ranh giới polygon, sao lưu tự động, Turnstile và app Android/iOS native chưa phải các tính năng hoàn thành trong nhật ký này.
+
+### 13/11/2026
+
+#### Đã thêm
+
+- Thêm chế độ showcase chỉ dùng frontend, sẵn sàng cho Vercel. Đăng nhập, ghim, vote aura, hồ sơ và ảnh đại diện được lưu trong session của trình duyệt; showcase không cần API backend hoặc database máy chủ.

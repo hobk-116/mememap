@@ -34,9 +34,9 @@ Membership/local/guest community, polygon hành chính, feed lọc theo vùng, s
 
 ## Hướng đi bản đồ và mobile
 
-Leaflet/OSM raster hiện tại được mô tả trong [kiến trúc](ARCHITECTURE.md) và [triển khai](DEPLOYMENT.md#dịch-vụ-bản-đồ). Dữ liệu địa lý community nên độc lập thư viện hiển thị: ranh giới có nguồn/phiên bản, ID nhất quán và kiểm tra tại backend.
+MapLibre/OpenFreeMap hiện tại được mô tả trong [kiến trúc](ARCHITECTURE.md) và [triển khai](DEPLOYMENT.md#dịch-vụ-bản-đồ). Dữ liệu địa lý community nên độc lập thư viện hiển thị: ranh giới có nguồn/phiên bản, ID nhất quán và kiểm tra tại backend.
 
-Xác định ý nghĩa từng cấp community trước khi chọn polygon, giới hạn viewport và bộ lọc feed. Giữ Leaflet hay chuyển nhà cung cấp bản đồ/SDK native là lựa chọn kỹ thuật về sau; tài liệu này không ghi nhận việc chuyển đó đã được duyệt hoặc hoàn thành.
+Xác định ý nghĩa từng cấp community trước khi chọn polygon, giới hạn viewport và bộ lọc feed. Chủ dự án đã cho phép migration renderer MapLibre/OpenFreeMap ngày 07/10/2026. Membership/polygon community và lựa chọn SDK native vẫn là đề xuất riêng; đổi renderer không triển khai những tính năng đó.
 
 Đề xuất model và thiết kế Admin cũ được giữ trong [lịch sử](history/MODEL_AND_ADMIN_NOTES.md). Hành vi hiện tại nằm trong tài liệu API và kiến trúc.
 

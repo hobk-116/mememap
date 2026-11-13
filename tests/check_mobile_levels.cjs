@@ -1,3 +1,4 @@
+const {mockMapStyle} = require('./map_fixture.cjs');
 /* Three sheet levels, sibling memory, simultaneous transitions and mobile tap safety. */
 const {chromium} = require('playwright');
 const assert = require('node:assert/strict');
@@ -11,7 +12,7 @@ const path = require('node:path');
     ...(process.env.MEMEMAP_TEST_BROWSER ? {executablePath:process.env.MEMEMAP_TEST_BROWSER} : {})});
   try {
     const context = await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
-    await context.route('https://tile.openstreetmap.org/**', route => route.abort());
+    await mockMapStyle(context);
     await context.route('**/assets/js/map-layout.js', route => route.fulfill({contentType:'text/javascript',body:
       fs.readFileSync(path.join(__dirname,'../assets/js/map-layout.js'),'utf8') +
       '\nconst originalLayout=MemeMap.createMapLayout;MemeMap.createMapLayout=options=>{window.testMap=options.map;window.testLayout=originalLayout(options);return testLayout;};'}));
@@ -153,14 +154,14 @@ const path = require('node:path');
     await page.locator('#profileClose').tap(); await settle();
     await drag('#adminPanel',upperGap*.38);
     assert.equal(await level('#adminPanel'),'default','Expose the map before testing its pinch gesture');
-    await page.evaluate(()=>testMap.setZoom(16,{animate:false}));
+    await page.evaluate(()=>testMap.setZoom(16,{duration:0}));
     await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:140,y:350,id:0},{x:240,y:350,id:1}]});
     for(let step=1;step<=6;step++) {
       await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:140-step*10,y:350,id:0},{x:240+step*10,y:350,id:1}]});
       await page.waitForTimeout(20);
     }
     await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await settle();
-    assert.equal(await page.evaluate(()=>testMap.getZoom()),17,'Map pinch zoom still works');
+    assert(await page.evaluate(()=>testMap.getZoom()>16.5),'Map pinch zoom still works');
     assert.equal(await page.evaluate(()=>visualViewport.scale),1,'Map pinch does not zoom the website');
     await page.setViewportSize({width:1280,height:850}); await settle();
     await page.locator('#toggle').click(); await settle();

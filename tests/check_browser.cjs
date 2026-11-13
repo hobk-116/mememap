@@ -1,3 +1,4 @@
+const {mockMapStyle} = require('./map_fixture.cjs');
 /* Run with Playwright available to Node, against tests/serve_fixture.py only. */
 const {chromium} = require('playwright');
 const assert = require('node:assert/strict');
@@ -14,8 +15,8 @@ const path = require('node:path');
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
-  // Test real Leaflet UI without issuing requests to the public tile service.
-  await page.route('https://tile.openstreetmap.org/**', route => route.abort());
+  // Test real MapLibre UI without issuing requests to the public tile service.
+  await mockMapStyle(page);
   await page.route('**/assets/js/map-layout.js', route => route.fulfill({contentType: 'text/javascript', body:
     fs.readFileSync(path.join(__dirname, '../assets/js/map-layout.js'), 'utf8') + `\nconst originalLayout=MemeMap.createMapLayout; MemeMap.createMapLayout=options=>{window.testMap=options.map; return originalLayout(options);};`}));
   const wait = () => page.waitForTimeout(320);
@@ -23,7 +24,7 @@ const path = require('node:path');
     const pin = document.querySelector('.fixed-pending-pin');
     const group = document.querySelector('#drawerToggleGroup').getBoundingClientRect();
     return {x: parseFloat(pin.style.left), y: parseFloat(pin.style.top), left: group.left, top: group.top,
-      ...(() => { const point = testMap.containerPointToLatLng(L.point(parseFloat(pin.style.left) + 21, parseFloat(pin.style.top) + 40));
+      ...(() => { const point = testMap.unproject([parseFloat(pin.style.left) + 21, parseFloat(pin.style.top) + 40]);
         return {lat: point.lat, lng: point.lng}; })()};
   });
   await page.goto(base);
@@ -53,19 +54,24 @@ const path = require('node:path');
   let after = await state();
   assert.equal(after.left, before.left, 'Desktop toggle group stays anchored');
   assert(after.x < before.x, 'Opening the right drawer moves the pin into the remaining map space');
-  const drift = await page.evaluate(({before, after}) => testMap.project([before.lat, before.lng])
-    .distanceTo(testMap.project([after.lat, after.lng])), {before, after});
-  assert(drift <= 1, 'Opening a desktop drawer preserves the anchor within Leaflet pixel rounding');
+  const drift = await page.evaluate(({before, after}) => (() => { const a = testMap.project([before.lng, before.lat]), b = testMap.project([after.lng, after.lat]);
+      return Math.hypot(a.x-b.x, a.y-b.y); })(), {before, after});
+  assert(drift <= 1, 'Opening a desktop drawer preserves the anchor within MapLibre pixel rounding');
   assert(!(await page.locator('#panel').evaluate(el => el.classList.contains('closed'))), 'Desktop menu remains open');
   await page.locator('#adminToggle').click();
   await wait();
   before = await state();
   assert(before.x > 600, 'Pin centers in the visible desktop map area');
-  await page.evaluate(() => { window.savedMarker = document.querySelector('.leaflet-marker-icon'); });
+  await page.evaluate(() => {
+    window.savedMarker = document.querySelector('.meme-map-marker'); window.popupUpdates = 0;
+    const original = MemeMap.maplibregl.Popup.prototype.setHTML;
+    MemeMap.maplibregl.Popup.prototype.setHTML = function(html) { popupUpdates++; return original.call(this, html); };
+  });
   await page.waitForTimeout(10_200);
-  assert(await page.evaluate(() => savedMarker === document.querySelector('.leaflet-marker-icon')),
+  assert(await page.evaluate(() => savedMarker === document.querySelector('.meme-map-marker')),
     'Periodic refresh reuses the existing marker');
-  await page.evaluate(() => testMap.panBy([60, 30], {animate: false}));
+  assert.equal(await page.evaluate(() => popupUpdates), 0, 'Unchanged periodic refresh does not rebuild a closed popup');
+  await page.evaluate(() => testMap.panBy([60, 30], {duration: 0}));
   after = await state();
   assert.equal(after.x, before.x, 'Pin is screen-fixed during normal map pan');
   assert.equal(after.y, before.y, 'Pin does not follow mouse or normal pan');
@@ -78,6 +84,8 @@ const path = require('node:path');
   const voted = page.waitForResponse(response => response.url().endsWith('/vote'));
   await page.locator('.pin-popup [data-value="1"]').click();
   assert.equal((await voted).status(), 200, 'Popup vote is sent successfully');
+  await page.waitForFunction(() => document.querySelector('.pin-popup .aura-score b')?.textContent === '1');
+  assert(await page.evaluate(() => popupUpdates > 0), 'A changed vote updates the active popup');
   await page.locator('.pin-author-link').waitFor();
   assert(!(await page.locator('#modal').evaluate(el => el.classList.contains('open'))), 'Popup control click does not open the pin composer');
   await page.route('**/api/profiles/browser_other', async route => {

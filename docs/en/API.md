@@ -88,11 +88,14 @@ The map accepts pins only inside the backend rectangle: latitude `20.09` through
   "zoom": 18,
   "min_zoom": 11,
   "max_zoom": 19,
+  "style": "https://tiles.openfreemap.org/styles/liberty",
   "tiles": {
     "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
     "attribution": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap contributors</a>"
   }
 }
 ```
+
+`style` is an additive field used by MapLibre; `tiles` is retained for legacy clients, but the current page does not request those raster tiles. Coordinates remain latitude/longitude. Zoom values keep the legacy 256 px tile scale: the current MapLibre client subtracts one from `zoom`, `min_zoom` and `max_zoom` for its 512 px world tile scale (initial zoom 17). Authentication, posting bounds and leaderboard scopes are unchanged.
 
 `meme_count` and `aura` in `/api/me` and `/api/profiles/{username}` cover all visible pins belonging to the author. Filtering the frontend feed does not change these totals. Map configuration does not grant access or determine local/guest status.

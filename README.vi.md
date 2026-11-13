@@ -7,7 +7,7 @@ MemeMap là bản đồ cộng đồng hỗ trợ tiếng Việt và tiếng Anh
 ## Thành phần dự án
 
 - `index.html` — trang chính, hướng dẫn, đăng ký/đăng nhập và hồ sơ của người đang đăng nhập.
-- `landing.html` — bản đồ tương tác Leaflet cùng các bảng menu, biểu mẫu đặt ghim, hồ sơ, Memerboard (Nông trại hào quang) và bảng Admin.
+- `landing.html` — bản đồ tương tác MapLibre GL JS cùng các bảng menu, biểu mẫu đặt ghim, hồ sơ, Memerboard (Nông trại hào quang) và bảng Admin.
 - `server.py` — lớp HTTP: định tuyến, cookie, đọc yêu cầu và gửi phản hồi.
 - `mememap/` — nghiệp vụ tài khoản, hồ sơ, ghim và kiểm duyệt; cấu hình, migration, ảnh và phạm vi địa lý.
 - `assets/` — ảnh hồ sơ mặc định và biểu tượng ứng dụng. Giao diện dùng `icon-128x.png`; tab trình duyệt dùng `icon-64x.png`. Tài khoản mới dùng ảnh đại diện mặc định WebP; tài khoản cũ có thể vẫn dùng PNG.
@@ -54,7 +54,7 @@ Xem [vận hành tại máy](docs/vi/RUNNING.md), [sao lưu](docs/vi/BACKUP.md) 
 - Cơ sở dữ liệu SQLite: `mememap.sqlite3` ở thư mục gốc repo, được tạo trong lần khởi động đầu tiên.
 - Ảnh tải lên: `uploads/memes/` và `uploads/profiles/`, được tạo khi cần.
 - Đây là dữ liệu phát sinh khi ứng dụng chạy và được Git bỏ qua. Sao lưu chúng cùng nhau vì cơ sở dữ liệu lưu đường dẫn đến ảnh.
-- Tâm bản đồ, phạm vi đăng ghim và tile được cấu hình tại `mememap/regions.py`, cung cấp cho frontend qua `GET /api/map-config` có xác thực. Phạm vi Memerboard được khai báo riêng trong cùng module; xem [kiến trúc](docs/vi/ARCHITECTURE.md).
+- Tâm bản đồ, phạm vi đăng ghim và style OpenFreeMap được cấu hình tại `mememap/regions.py`, cung cấp cho frontend qua `GET /api/map-config` có xác thực. Phạm vi Memerboard được khai báo riêng trong cùng module; xem [kiến trúc](docs/vi/ARCHITECTURE.md).
 - Khởi động lại máy chủ sau khi cập nhật backend. Migration có phiên bản, giữ dữ liệu hiện có; sao lưu database và ảnh cùng nhau trước khi nâng cấp. Có thể cấu hình đường dẫn dữ liệu bằng biến môi trường trong tài liệu vận hành.
 
 ## Tài liệu
@@ -77,3 +77,7 @@ Xem [vận hành tại máy](docs/vi/RUNNING.md), [sao lưu](docs/vi/BACKUP.md) 
 ## Trạng thái dự án
 
 Đây là bản thử nghiệm đang tiếp tục phát triển. Bản đồ và Memerboard hiện hỗ trợ Hà Nội. Máy chủ HTTP có quy mô nhỏ và chưa được gia cố đầy đủ để vận hành công khai trong môi trường production. Đọc phần bảo mật và dịch vụ bản đồ trong [hướng dẫn triển khai](docs/vi/DEPLOYMENT.md) trước khi mở truy cập ra ngoài môi trường thử nghiệm tin cậy.
+
+## Showcase chỉ frontend
+
+Showcase trên Vercel dùng lại giao diện HTML/CSS với bộ điều hợp dữ liệu trong trình duyệt tại `assets/js/api.js`. Hoạt động của người dùng được lưu trong `sessionStorage` của tab hiện tại. Đây là bản trình diễn, không lưu tài khoản, ghim, vote hoặc media trên máy chủ. Khi triển khai dạng static trên Vercel, không cần Python runtime hoặc SQLite database.

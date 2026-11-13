@@ -1,3 +1,4 @@
+const {mockMapStyle} = require('./map_fixture.cjs');
 /* Run against tests/serve_fixture.py, with Playwright available to Node. */
 const {chromium} = require('playwright');
 const assert = require('node:assert/strict');
@@ -13,7 +14,7 @@ const path = require('node:path');
     const page = await browser.newPage();
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
-    await page.route('https://tile.openstreetmap.org/**', route => route.abort());
+    await mockMapStyle(page);
     await page.route('**/assets/js/map-layout.js', route => route.fulfill({contentType: 'text/javascript', body:
       fs.readFileSync(path.join(__dirname, '../assets/js/map-layout.js'), 'utf8') +
       '\nconst originalLayout=MemeMap.createMapLayout; MemeMap.createMapLayout=options=>{window.testMap=options.map; return originalLayout(options);};'}));
@@ -23,12 +24,12 @@ const path = require('node:path');
     }));
     const markerLocation = () => page.locator('.interactive-pending-marker').evaluate(el => {
       const rect = el.getBoundingClientRect();
-      const geo = testMap.containerPointToLatLng(L.point(rect.left + 21, rect.top + 40));
+      const geo = testMap.unproject([rect.left + 21, rect.top + 40]);
       return {lat: geo.lat, lng: geo.lng};
     });
     const fixedLocation = () => page.evaluate(() => {
       const el = document.querySelector('.fixed-pending-pin');
-      const geo = testMap.containerPointToLatLng(L.point(parseFloat(el.style.left) + 21, parseFloat(el.style.top) + 40));
+      const geo = testMap.unproject([parseFloat(el.style.left) + 21, parseFloat(el.style.top) + 40]);
       return {lat: geo.lat, lng: geo.lng};
     });
     const closeComposer = async () => { await page.locator('#cancel').click(); await settle(); };
@@ -78,7 +79,7 @@ const path = require('node:path');
         assert.deepEqual(await fixedState(), closed, 'Desktop closed selection leaves the fixed pin untouched');
       }
       const selected = await (mobile ? fixedLocation() : markerLocation());
-      await page.evaluate(() => testMap.panBy([35, 20], {animate: false}));
+      await page.evaluate(() => testMap.panBy([35, 20], {duration: 0}));
       closeEnough(await (mobile ? fixedLocation() : markerLocation()), selected, 'Selection stays at its geographic coordinates');
       if (mobile) {
         await page.setViewportSize({width:1280,height:850});await settle();
@@ -95,8 +96,8 @@ const path = require('node:path');
       await settle();
       const reopened = await fixedLocation();
       const anchorDistance = await page.evaluate(({anchor, reopened}) =>
-        testMap.project(anchor).distanceTo(testMap.project(reopened)), {anchor, reopened});
-      assert(anchorDistance <= 1, 'Reopening preserves the old layout anchor within Leaflet pixel rounding');
+        (() => { const a = testMap.project(anchor), b = testMap.project(reopened); return Math.hypot(a.x-b.x, a.y-b.y); })(), {anchor, reopened});
+      assert(anchorDistance <= 1, 'Reopening preserves the old layout anchor within MapLibre pixel rounding');
       assert.equal((await fixedState()).opacity, '1', 'The old pin is visible again');
       assert.equal(await page.locator('.interactive-pending-marker').count(), 0, 'Reopening does not revive the new pin');
       await page.locator('#toggle').click();

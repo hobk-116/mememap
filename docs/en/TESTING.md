@@ -16,7 +16,7 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 
 `tests/test_server.py` covers authentication, image and voting behavior, plus three simultaneous bursts of all allow-listed assets to check complete responses without connection resets. `tests/test_admin.py` covers migration preservation, administrative permissions, hide/restore visibility, report decisions, expiring restrictions, audit history, list filters, and overview signals. These tests create disposable databases and uploads under a temporary directory and bind a local ephemeral port. They never use the production `mememap.sqlite3` or production uploads.
 
-`tests/check_admin_ui.cjs` uses Playwright/Chromium against the URL printed by `python3 tests/serve_fixture.py`. It exercises reporting, report review, hide/restore, history filters, scoped restrictions and lifting, permanent deletion, language switching, simultaneous desktop drawers, the shared mobile sheet, and mobile touch scrolling/dragging. Set `MEMEMAP_TEST_BROWSER` if using an installed Chrome executable. Tile requests are blocked by the check. Stop the fixture with Ctrl+C when done; its database and uploads are disposable.
+`tests/check_admin_ui.cjs` uses Playwright/Chromium against the URL printed by `python3 tests/serve_fixture.py`. It exercises reporting, report review, hide/restore, history filters, scoped restrictions and lifting, permanent deletion, language switching, simultaneous desktop drawers, the shared mobile sheet, and mobile touch scrolling/dragging. Set `MEMEMAP_TEST_BROWSER` if using an installed Chrome executable. The checks replace OpenFreeMap data with a deterministic background style while using the real CDN MapLibre engine. Stop the fixture with Ctrl+C when done; its database and uploads are disposable.
 
 `tests/check_mobile_drawers.cjs` uses the same disposable fixture to check mobile Menu/Admin switching, touch expansion, per-sibling height memory, preserved map anchor/filters, heading-only closing, independent desktop drawers and transitions across the mobile breakpoint.
 
@@ -32,6 +32,8 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 python3 tests/run_browser.py check_mobile_sheet_motion.cjs check_mobile_levels.cjs check_mobile_sheet_ux.cjs check_mobile_drawers.cjs check_pin_zoom.cjs check_map_layers.cjs
 ```
 
+The mobile sheet motion suite also measures the placement-hint and attribution gaps after layout and before paint during drags/snaps and Memerboard entry/return, using a map fixture with attribution.
+
 ## Run all foundation checks
 
 ```sh
@@ -44,10 +46,16 @@ The browser runner creates and cleans a separate fixture server/database/media d
 
 `test_foundation.py` checks services without HTTP, profile totals, application isolation, image cleanup after database failures, migration rollback/retry and conflicting media. `test_api_client.cjs` checks JSON, error details, expired-session redirects and cancellation. The two new browser suites cover partial feeds and profile totals, profile entry points, logout failures and confirm/cancel on both pages, languages and desktop/mobile sizes.
 
-Browser checks use Chromium and block public tiles. Mobile viewports and simulated image fallbacks do not replace testing on actual Safari/iPhone/Android devices.
+Browser checks use Chromium and a deterministic local style instead of public map data. Mobile viewports and simulated image fallbacks do not replace testing on actual Safari/iPhone/Android devices.
 
 `check_pin_zoom.cjs` checks Menu pin-list navigation below, at and above the configured default zoom on desktop/mobile viewports. It also supplies an alternate default through the map-config response to detect hard-coded zoom values, and verifies that the selected pin popup opens. On mobile it expands the sheet by touch before each selection because selecting a pin now collapses it:
 
 ```sh
 python3 tests/run_browser.py check_pin_zoom.cjs check_browser.cjs
 ```
+
+## MapLibre migration coverage
+
+`tests/map_fixture.cjs` substitutes the OpenFreeMap style in behavior checks so they do not depend on public tiles. The real pinned MapLibre ESM/CSS/worker still load from CDN. `check_maplibre.cjs` checks the API center, z17 versus legacy z18 pixel scale, keyboard marker activation and Vietnamese/English feedback for module/CSS/style/worker failures and WebGL context loss. Existing pin, layering, sheet, Admin, profile and logout assertions use native MapLibre coordinates/selectors and retain their behavioral coverage. Pin-list default zoom tests account for the one-level conversion; touch zoom assertions permit the engine's continuous zoom. Run real OpenFreeMap loading/attribution separately from the deterministic suite; real-device WebGL/touch/keyboard/performance remains separate from emulation.
+
+`check_browser.cjs` also counts popup content updates across the 10-second refresh: unchanged closed popups must not be rebuilt, while a successful vote must update the active aura score.

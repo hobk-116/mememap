@@ -1,0 +1,49 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - link "mememap" [ref=e3] [cursor=pointer]:
+      - /url: index.html
+    - generic [ref=e4]:
+      - button "Switch to English" [ref=e5] [cursor=pointer]: 🇺🇸
+      - link "Đăng nhập / Đăng ký" [ref=e6] [cursor=pointer]:
+        - /url: landing.html
+  - main [ref=e7]:
+    - generic [ref=e8]:
+      - heading "Mỗi nơi chốn có một câu chuyện." [level=1] [ref=e9]: Mỗi nơi chốncó một câu chuyện.
+      - region [ref=e10]:
+        - heading "Đăng nhập để mở bản đồ" [level=2] [ref=e11]
+        - paragraph [ref=e12]: Tạo tài khoản hoặc đăng nhập để tiếp tục.
+        - generic [ref=e13]:
+          - generic [ref=e14]:
+            - button "Đăng nhập" [ref=e15] [cursor=pointer]
+            - button "Đăng ký" [ref=e16] [cursor=pointer]
+          - generic [ref=e17]:
+            - generic [ref=e18]:
+              - generic [ref=e19]: Username
+              - textbox "Username" [ref=e20]
+            - generic [ref=e21]:
+              - generic [ref=e22]: Mật khẩu
+              - textbox "Mật khẩu" [ref=e23]
+            - button "Đăng nhập" [ref=e24] [cursor=pointer]
+        - status [ref=e25]
+      - paragraph [ref=e26]: MemeMap là bản đồ cộng đồng để chia sẻ meme, ảnh và những chuyện đáng nhớ gắn với các địa điểm ở Hà Nội. Chọn một nơi, kể một chuyện — rồi cùng khám phá thành phố qua góc nhìn của mọi người.
+    - region "Cách sử dụng" [ref=e27]:
+      - article [ref=e28]:
+        - generic [ref=e29]: "01"
+        - heading "Khám phá Hà Nội" [level=2] [ref=e30]
+        - paragraph [ref=e31]: Di chuyển hoặc phóng to bản đồ. Chạm vào ghim để xem câu chuyện.
+      - article [ref=e32]:
+        - generic [ref=e33]: "02"
+        - heading "Đăng meme" [level=2] [ref=e34]
+        - paragraph [ref=e35]: Chạm vào bản đồ hoặc nút “Đặt ghim mới”, thêm tiêu đề và nội dung.
+      - article [ref=e36]:
+        - generic [ref=e37]: "03"
+        - heading "Canh tác hào quang" [level=2] [ref=e38]
+        - paragraph [ref=e39]: Dùng +aura hoặc −aura để bình chọn cho ghim của người khác. Bạn không thể tự bình chọn ghim của mình.
+      - article [ref=e40]:
+        - generic [ref=e41]: "04"
+        - heading "Nông trại hào quang" [level=2] [ref=e42]
+        - paragraph [ref=e43]: Mở Nông trại hào quang để xem các ghim được cộng đồng yêu thích nhất.
+    - complementary [ref=e44]: Vẫn đang thử nghiệm.
+  - contentinfo [ref=e45]:
+    - generic [ref=e46]: © 2026 MEMEMAP
+    - generic [ref=e47]: Vibe-coded by GPT-6 Luna & Sol ✳

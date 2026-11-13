@@ -16,7 +16,7 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 
 `tests/test_server.py` kiểm tra đăng nhập, ảnh và bình chọn, cùng ba lượt tải đồng thời toàn bộ tài nguyên được cho phép để kiểm tra phản hồi đầy đủ, không reset kết nối. `tests/test_admin.py` kiểm tra bảo toàn dữ liệu khi nâng cấp, quyền quản trị, ẩn/khôi phục, quyết định xử lý báo cáo, hạn chế hết hạn, lịch sử, bộ lọc danh sách và dấu hiệu Tổng quan. Các kiểm tra tạo cơ sở dữ liệu và ảnh trong thư mục tạm, dùng cổng local tạm thời. Chúng không dùng `mememap.sqlite3` hoặc ảnh đang phục vụ thực tế.
 
-`tests/check_admin_ui.cjs` dùng Playwright/Chromium với URL do `python3 tests/serve_fixture.py` in ra. Nó kiểm tra gửi/xem xét báo cáo, ẩn/khôi phục, lọc lịch sử, hạn chế theo quyền và gỡ hạn chế, xóa vĩnh viễn, chuyển ngôn ngữ, mở hai bảng đồng thời trên desktop, bảng dùng chung trên mobile và cuộn/kéo bằng thao tác chạm. Đặt `MEMEMAP_TEST_BROWSER` nếu dùng file thực thi Chrome đã cài. Kiểm tra chặn yêu cầu tile. Dừng máy chủ dữ liệu tạm bằng Ctrl+C khi xong; cơ sở dữ liệu và ảnh của nó chỉ dùng tạm.
+`tests/check_admin_ui.cjs` dùng Playwright/Chromium với URL do `python3 tests/serve_fixture.py` in ra. Nó kiểm tra gửi/xem xét báo cáo, ẩn/khôi phục, lọc lịch sử, hạn chế theo quyền và gỡ hạn chế, xóa vĩnh viễn, chuyển ngôn ngữ, mở hai bảng đồng thời trên desktop, bảng dùng chung trên mobile và cuộn/kéo bằng thao tác chạm. Đặt `MEMEMAP_TEST_BROWSER` nếu dùng file thực thi Chrome đã cài. Bài kiểm tra thay dữ liệu OpenFreeMap bằng style nền cố định, vẫn dùng engine MapLibre thật từ CDN. Dừng máy chủ dữ liệu tạm bằng Ctrl+C khi xong; cơ sở dữ liệu và ảnh của nó chỉ dùng tạm.
 
 `tests/check_mobile_drawers.cjs` dùng cùng máy chủ dữ liệu tạm để kiểm tra chuyển Menu/Admin trên mobile, kéo mở rộng bằng thao tác chạm, ghi nhớ chiều cao riêng giữa các bảng cùng cấp, giữ điểm neo/bộ lọc, đóng về mức chỉ hiện tiêu đề, hai bảng độc lập trên desktop và đổi kích thước qua ngưỡng mobile.
 
@@ -32,6 +32,8 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 python3 tests/run_browser.py check_mobile_sheet_motion.cjs check_mobile_levels.cjs check_mobile_sheet_ux.cjs check_mobile_drawers.cjs check_pin_zoom.cjs check_map_layers.cjs
 ```
 
+Bộ kiểm tra chuyển động bảng mobile cũng đo khoảng cách nút đặt ghim và dòng nguồn sau cập nhật bố cục, trước khi vẽ, khi kéo/thả và vào/quay lại Nông trại hào quang; dữ liệu bản đồ thử có dòng nguồn.
+
 ## Chạy toàn bộ kiểm tra nền tảng
 
 ```sh
@@ -44,10 +46,16 @@ Lệnh cuối tự tạo một server/database/ảnh tạm riêng cho từng nh�
 
 `test_foundation.py` kiểm tra service độc lập HTTP, tổng hồ sơ, tách dữ liệu giữa các instance, dọn ảnh khi database lỗi, migration rollback/chạy lại và xung đột ảnh. `test_api_client.cjs` kiểm tra JSON, chi tiết lỗi, điều hướng khi phiên hết hạn và hủy yêu cầu. Hai nhóm browser mới kiểm tra hồ sơ với feed chỉ chứa một phần ghim, nguồn mở hồ sơ, đăng xuất lỗi và xác nhận/hủy đăng xuất trên hai trang, hai ngôn ngữ, desktop/mobile.
 
-Các kiểm tra trình duyệt chạy trên Chromium và chặn tile công cộng; viewport mobile và giả lập fallback ảnh không thay thế thử trên Safari/iPhone/Android thật.
+Các kiểm tra trình duyệt chạy trên Chromium và dùng style nền cố định thay dữ liệu bản đồ công cộng; viewport mobile và giả lập fallback ảnh không thay thế thử trên Safari/iPhone/Android thật.
 
 `check_pin_zoom.cjs` kiểm tra chọn ghim trong Menu khi zoom dưới, bằng và trên mức mặc định ở viewport desktop/mobile. Nó cũng cung cấp mức mặc định khác qua phản hồi map-config để phát hiện giá trị zoom ghi cố định, và xác nhận popup của ghim đã chọn mở ra. Trên mobile, nó kéo mở rộng bảng trước mỗi lần chọn vì chọn ghim nay sẽ thu gọn bảng:
 
 ```sh
 python3 tests/run_browser.py check_pin_zoom.cjs check_browser.cjs
 ```
+
+## Kiểm tra migration MapLibre
+
+`tests/map_fixture.cjs` thay style OpenFreeMap trong kiểm tra hành vi để không phụ thuộc tile công khai. ESM/CSS/worker MapLibre thật đã chốt phiên bản vẫn tải từ CDN. `check_maplibre.cjs` kiểm tra tâm API, thang pixel z17 so với z18 cũ, mở marker bằng bàn phím và thông báo VI/EN khi module/CSS/style/worker lỗi hoặc mất WebGL context. Các assertion ghim, layering, sheet, Admin, profile và logout dùng tọa độ/selector MapLibre, giữ phạm vi hành vi. Kiểm tra zoom mặc định khi chọn ghim tính phép trừ một; assertion touch zoom cho phép zoom liên tục của engine. Kiểm tra tải OpenFreeMap thật/attribution riêng với bộ suite cố định; WebGL/chạm/bàn phím/hiệu năng trên thiết bị thật tách khỏi giả lập.
+
+`check_browser.cjs` còn đếm lần cập nhật nội dung popup qua refresh 10 giây: popup đóng không đổi không được dựng lại; vote thành công phải cập nhật aura đang hiển thị.

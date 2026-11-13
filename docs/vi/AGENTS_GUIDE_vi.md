@@ -7,6 +7,16 @@
 - Cho đến khi chủ dự án thay đổi quyết định, đề xuất Cloudflare Tunnel để chia sẻ prototype hiện tại từ PC hoặc VPS ra Internet; không lấy việc mở trực tiếp máy chủ ra Internet, chuyển tiếp cổng router hoặc hosting qua DDNS làm phương án mặc định. Truy cập công khai phải dùng HTTPS; HTTP chỉ được dùng giữa tunnel và localhost.
 - Xem các câu hỏi và câu hỏi về khả năng thực hiện, bao gồm “có làm không?” hoặc “có thể làm không?”, là yêu cầu cung cấp thông tin. Chỉ thực hiện thay đổi khi chủ dự án đích danh yêu cầu làm.
 
+## Tài liệu bắt buộc đọc và nguồn xác định yêu cầu
+
+- Khi bắt đầu tác vụ trong repo, đọc [README.md](../../README.md), [mục lục tài liệu](README.md) và các mục mới nhất trong [CHANGELOG.md](../../CHANGELOG.md).
+- Trước khi sửa code, đọc phần liên quan trong [ARCHITECTURE.md](ARCHITECTURE.md), [API.md](API.md) nếu có API và [TESTING.md](TESTING.md), cùng mã nguồn và test liên quan. Đọc [RECOMMENDATIONS.md](RECOMMENDATIONS.md) khi tác vụ ảnh hưởng định hướng sản phẩm hoặc community.
+- Đọc [VERSIONS.md](history/VERSIONS.md) khi cần truy nguyên lịch sử hoặc xử lý phiên bản. Không coi hành vi lịch sử trong VERSIONS hoặc changelog là yêu cầu hiện hành nếu đã bị thay thế.
+- Đọc RUNNING, DEPLOYMENT, BACKUP hoặc GIT_WORKFLOW khi tác vụ liên quan. Không bắt buộc đọc toàn bộ tài liệu cho mọi chỉnh sửa nhỏ.
+- Phân biệt rõ hành vi đã triển khai, quyết định đã chốt, đề xuất và quyết định chưa chốt. Không tự triển khai tính năng từ đề xuất, checklist hoặc trao đổi chỉ mang tính cân nhắc.
+- Tuân theo yêu cầu hiện tại của chủ dự án và quy tắc AGENTS đang có hiệu lực. Khi tài liệu và code mâu thuẫn, báo rõ khác biệt thay vì tự suy đoán ý định sản phẩm.
+- Không giả định truy cập được chat khác. Nếu quyết định cần thiết chưa có trong repo hoặc ngữ cảnh được cung cấp, hỏi chủ dự án trước khi thực hiện phần công việc phụ thuộc quyết định đó.
+
 ## Chính sách kiểm tra
 
 Khi có yêu cầu triển khai rõ ràng, thực hiện các kiểm tra phù hợp như một phần của công việc. Phân loại từng thay đổi theo tác động và rủi ro thực tế, rồi áp dụng quy tắc số module bên dưới. Cấp độ mô tả thay đổi, không phải xếp hạng cố định của module.

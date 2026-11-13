@@ -28,6 +28,6 @@ Trước khi mở công khai, cũng cần hoàn thành [sao lưu và thử khôi
 
 ## Dịch vụ bản đồ
 
-Trang bản đồ tải Leaflet từ CDN và các tile ảnh raster tiêu chuẩn từ dịch vụ tile công khai của OpenStreetMap. Ứng dụng không tải hàng loạt để lưu cục bộ hoặc tự phục vụ tile. Giữ phần ghi nguồn hiển thị và tuân thủ chính sách sử dụng hiện hành; khi chạy production hoặc có lưu lượng lớn, chọn nhà cung cấp phù hợp về điều khoản và khả năng phục vụ. Không dùng endpoint tile công khai để tải tile hàng loạt.
+Trang bản đồ tải MapLibre GL JS 6.13.0, CSS và worker đã chốt phiên bản từ unpkg, cùng style/dữ liệu vector Liberty từ OpenFreeMap. Giữ control attribution hiển thị; dữ liệu bao gồm ghi nguồn OpenStreetMap và OpenMapTiles. Trình duyệt cần truy cập các dịch vụ ngoài này và hỗ trợ WebGL. Ứng dụng không tự phục vụ hoặc tải tile hàng loạt. CSP triển khai phải cho phép module/CSS, endpoint style/tile/glyph/sprite và Blob worker của cấu hình CDN; nếu cấm Blob worker, cần triển khai cấu hình worker same-origin đã rà soát. Thử trình duyệt mobile thật trước khi phát hành. Xem [cài MapLibre](https://maplibre.org/maplibre-gl-js/docs/) và [OpenFreeMap](https://openfreemap.org/quick_start/).
 
 Ứng dụng chỉ yêu cầu vị trí khi người dùng bật nút định vị; trình duyệt sẽ hỏi quyền. Ứng dụng không theo dõi vị trí liên tục. Ngoài ra, tọa độ ghim được chọn bằng tương tác trên bản đồ. Tra cứu vị trí ghim hiện không dùng dịch vụ geocoding.

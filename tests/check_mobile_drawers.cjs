@@ -1,3 +1,4 @@
+const {mockMapStyle} = require('./map_fixture.cjs');
 /* Use tests/serve_fixture.py only. Verify the shared mobile sheet and desktop drawers. */
 const {chromium} = require('playwright');
 const assert = require('node:assert/strict');
@@ -11,7 +12,7 @@ const path = require('node:path');
     ...(process.env.MEMEMAP_TEST_BROWSER ? {executablePath:process.env.MEMEMAP_TEST_BROWSER} : {})});
   try {
     const context = await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
-    await context.route('https://tile.openstreetmap.org/**', route => route.abort());
+    await mockMapStyle(context);
     await context.route('**/assets/js/map-layout.js', route => route.fulfill({contentType:'text/javascript',body:
       fs.readFileSync(path.join(__dirname,'../assets/js/map-layout.js'),'utf8') +
       '\nconst originalLayout=MemeMap.createMapLayout;MemeMap.createMapLayout=options=>{window.testMap=options.map;return originalLayout(options);};'}));
@@ -24,7 +25,7 @@ const path = require('node:path');
     const state = () => page.evaluate(() => {
       const active = [...document.querySelectorAll('.panel:not(.closed)')];
       const pin = document.querySelector('.fixed-pending-pin');
-      const geo = testMap.containerPointToLatLng(L.point(parseFloat(pin.style.left)+21,parseFloat(pin.style.top)+40));
+      const geo = testMap.unproject([parseFloat(pin.style.left)+21,parseFloat(pin.style.top)+40]);
       const box = active[0]?.getBoundingClientRect();
       return {active:active.map(panel=>panel.id),height:box?.height,top:box?.top,
         pinX:parseFloat(pin.style.left),pinY:parseFloat(pin.style.top),lat:geo.lat,lng:geo.lng};

@@ -94,7 +94,7 @@ button {
   background:#e7ebdf
 }
 
-.leaflet-control-attribution {
+.maplibregl-ctrl-attrib {
   font-size:9px!important
 }
 
@@ -454,7 +454,7 @@ button {
   text-underline-offset:3px
 }
 
-.leaflet-popup-content-wrapper {
+.maplibregl-popup-content {
   border-radius:12px
 }
 
@@ -593,7 +593,7 @@ button {
     transition:none
   }
 
-  .leaflet-top.leaflet-right {
+  .maplibregl-ctrl-top-right {
     top:120px;
     right:8px
   }
@@ -995,7 +995,7 @@ button {
   place-items:center;
   border:2px solid #20221f;
   border-radius:50% 50% 50% 7px;
-  background:var(--coral);
+  background:#d62f1f;
   color:#fff;
   box-shadow:0 4px 12px #25251e40;
   font-size:20px;
@@ -1297,7 +1297,7 @@ body:has(.panel.dragging) .fixed-pending-pin {
     transform:translateX(calc(100% + 25px))
   }
 
-  body.drawer-right-open .leaflet-bottom.leaflet-right .leaflet-control-zoom {
+  body.drawer-right-open .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group {
     margin-right:calc(var(--drawer-panel-width, 365px) + 24px)
   }
 
@@ -1342,7 +1342,7 @@ body:has(.panel.dragging) .fixed-pending-pin {
 
 }
 
-.leaflet-marker-icon .pin-emoji {
+.meme-map-marker .pin-emoji {
   width: 40px;
   height: 40px;
 }
@@ -1361,3 +1361,19 @@ body:has(.panel.dragging) .fixed-pending-pin {
     font-size:16px
   }
 }
+
+/* Preserve the existing pin UI within MapLibre's map stacking context. */
+#map {z-index:0;isolation:isolate}
+.meme-map-marker {width:40px;height:40px;z-index:600;cursor:pointer}
+.fixed-placement-layer {position:absolute;inset:0;z-index:650;pointer-events:none}
+.interactive-pending-marker {width:42px;height:42px;z-index:650}
+.maplibregl-popup {z-index:700}
+.maplibregl-popup-content {padding:13px 19px;font:12px/1.4 var(--sans);box-shadow:0 3px 14px #0006}
+.maplibregl-popup-close-button {font-size:20px;color:#757575;right:3px}
+.maplibregl-ctrl-group button {width:30px;height:30px}
+.map-status {position:absolute;z-index:450;bottom:30px;left:50%;transform:translateX(-50%);
+  max-width:calc(100% - 32px);padding:10px 14px;border:1px solid var(--line);border-radius:12px;
+  background:var(--card);font-size:12px}
+
+.maplibregl-ctrl-attrib {position:absolute;right:var(--map-attribution-right,0px);
+  bottom:var(--map-attribution-bottom,0px);width:max-content;max-width:var(--map-attribution-width,100vw);margin:0}

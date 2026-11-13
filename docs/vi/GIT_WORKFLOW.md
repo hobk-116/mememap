@@ -4,6 +4,8 @@
 
 Đây là kế hoạch thực hiện cho lần đẩy GitHub và chuyển sang MapLibre + OpenFreeMap sau này. Việc ghi tài liệu này không commit/push, tạo branch/worktree, chạy server hay chuyển map. Hướng dẫn được đối chiếu ngày 04/10/2026; cần kiểm tra lại trạng thái repo trước khi thực hiện.
 
+Trạng thái migration (07/10/2026): nhánh local `codex/maplibre-openfreemap` đã có và checkout gốc hiện đang ở nhánh đó. Sửa đổi migration chưa commit; tác vụ này chưa tạo worktree thứ hai, tag baseline, commit/push migration hoặc release. Sửa đổi chính sách chưa commit có sẵn vẫn được giữ trong working tree. Để so sánh hai bản, trước tiên bảo toàn thay đổi đã rà soát bằng commit được cho phép rõ ràng, rồi dùng checkout/dữ liệu riêng như dưới đây. Không chuyển checkout đang có thay đổi sang `main` rồi mặc định đang chạy bản cũ: sửa đổi chưa commit có thể đi theo khi chuyển nhánh. Lệnh upload/tag/merge dưới đây vẫn là hướng dẫn cần được cho phép.
+
 ## Bố trí dự kiến
 
 | Phiên bản | Branch | Thư mục | URL tại máy | Dữ liệu chạy |
@@ -11,9 +13,9 @@
 | Bản Leaflet hiện tại làm mốc | `main` | `meme-map/` | `http://127.0.0.1:8000` | `mememap-data/leaflet/` |
 | Bản thử MapLibre + OpenFreeMap | `codex/maplibre-openfreemap` | `meme-map-maplibre/` | `http://127.0.0.1:8001` | `mememap-data/maplibre/` |
 
-Các thư mục trên nằm ngang hàng. Tên branch/thư mục là đề xuất, chưa được tạo. Mỗi bản checkout chứa toàn bộ mã nguồn ở phiên bản đó. Chỉ tạo branch chưa tạo được thư mục chạy thứ hai; [Git worktree](https://git-scm.com/docs/git-worktree) tạo các checkout riêng dùng chung lịch sử Git. Thay đổi chưa commit và file bị ignore không được sao chép sang checkout mới.
+Các thư mục trên nằm ngang hàng. Nhánh migration đã có; thư mục thứ hai vẫn là đề xuất. Mỗi bản checkout chứa toàn bộ mã nguồn ở phiên bản đó. Chỉ tạo branch chưa tạo được thư mục chạy thứ hai; [Git worktree](https://git-scm.com/docs/git-worktree) tạo các checkout riêng dùng chung lịch sử Git. Thay đổi chưa commit và file bị ignore không được sao chép sang checkout mới.
 
-Repo tại máy đã có `main`, một commit ban đầu và `origin` trỏ đến `https://github.com/hobk-116/meme-map.git`. Nhiều file nguồn, kiểm tra và tài liệu hiện tại còn untracked; commit ban đầu chưa chứa phần frontend/refactor hiện tại. Có remote được cấu hình không chứng minh GitHub đang chứa những commit nào hoặc tài khoản hiện tại có quyền ghi.
+Repo tại máy có `main`, nhánh migration và baseline Leaflet chia module đã commit tại `41fb364` (đối chiếu nguồn ngày 07/10/2026). Sửa đổi migration vẫn chưa commit. `origin` được cấu hình cho `https://github.com/hobk-116/mememap.git`. Có remote được cấu hình không chứng minh GitHub đang chứa những commit nào hoặc tài khoản hiện tại có quyền ghi.
 
 ## 1. Bảo toàn dữ liệu và kiểm tra repo
 

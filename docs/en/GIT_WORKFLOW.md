@@ -4,6 +4,8 @@
 
 This is the execution plan for a later GitHub upload and MapLibre + OpenFreeMap migration. Writing this guide does not commit/push code, create branches/worktrees, start servers or migrate the map. Instructions were checked on 04/10/2026; recheck repository state before executing them.
 
+Current migration status (07/10/2026): local branch `codex/maplibre-openfreemap` exists and the original checkout is currently on it. Migration edits are uncommitted; no second worktree, baseline tag, migration commit/push or release was created by this task. Existing unrelated uncommitted policy changes remain in the working tree. To compare versions, first preserve reviewed changes in an explicitly authorized commit, then use separate checkouts/data as below. Do not switch this dirty checkout to `main` and assume it serves the old version: uncommitted edits can follow the switch. The following upload/tag/merge commands remain instructions requiring authorization.
+
 ## Intended arrangement
 
 | Version | Branch | Folder | Local URL | Runtime data |
@@ -11,9 +13,9 @@ This is the execution plan for a later GitHub upload and MapLibre + OpenFreeMap 
 | Current Leaflet baseline | `main` | `meme-map/` | `http://127.0.0.1:8000` | `mememap-data/leaflet/` |
 | MapLibre + OpenFreeMap experiment | `codex/maplibre-openfreemap` | `meme-map-maplibre/` | `http://127.0.0.1:8001` | `mememap-data/maplibre/` |
 
-The folders above are siblings. Branch and folder names are proposed, not already created. Each checkout contains a complete source snapshot. A branch alone does not supply a second running directory; [Git worktrees](https://git-scm.com/docs/git-worktree) provide separate checkouts sharing Git history. Uncommitted edits and ignored files are not copied into the new checkout.
+The folders above are siblings. The migration branch now exists; the second folder remains proposed. Each checkout contains a complete source snapshot. A branch alone does not supply a second running directory; [Git worktrees](https://git-scm.com/docs/git-worktree) provide separate checkouts sharing Git history. Uncommitted edits and ignored files are not copied into the new checkout.
 
-The local repository already has `main`, one initial commit and `origin` set to `https://github.com/hobk-116/meme-map.git`. Many current source, test and documentation files are still untracked; the current frontend/refactor work is not represented by that initial commit. The configured remote does not prove which commits are currently on GitHub or that the current account has write access.
+The local repository has `main`, the migration branch and a committed modular Leaflet baseline at `41fb364` (07/10/2026 source inspection). Migration edits remain uncommitted. `origin` is configured for `https://github.com/hobk-116/mememap.git`. The configured remote does not prove which commits are currently on GitHub or that the current account has write access.
 
 ## 1. Preserve data and inspect the repository
 

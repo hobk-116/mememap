@@ -10,7 +10,12 @@ const assert = require('node:assert/strict');
   try {
     for (const viewport of [{width:390,height:844},{width:360,height:740}]) {
       const context = await browser.newContext({viewport,isMobile:true,hasTouch:true});
-      await context.route('https://tile.openstreetmap.org/**',route=>route.abort());
+      await context.route('https://tiles.openfreemap.org/**', route => route.fulfill({json:{
+        version:8, sources:{fixture:{type:'geojson', data:{type:'FeatureCollection',features:[]},
+          attribution:'OpenFreeMap © OpenMapTiles Data from OpenStreetMap'}},
+        layers:[{id:'background',type:'background',paint:{'background-color':'#e7ebdf'}},
+          {id:'fixture',type:'circle',source:'fixture'}],
+      }}));
       assert.equal((await context.request.post(base+'/api/login',{data:{username:'browser_admin',password:'browser-test-123'}})).status(),200);
       const page = await context.newPage(), errors = [];
       page.on('pageerror',error=>errors.push(error.message));
@@ -25,7 +30,10 @@ const assert = require('node:assert/strict');
           const panel=document.querySelector(id), box=panel.getBoundingClientRect(),
             title=panel.querySelector('h1').getBoundingClientRect(), eye=panel.querySelector('.eyebrow').getBoundingClientRect(),
             footer=panel.querySelector('.panel-switch,.admin-tabs'), foot=footer.getBoundingClientRect(), style=getComputedStyle(footer);
-          return {height:box.height,title:title.top-box.top,eye:eye.top-box.top,
+          const hint=document.querySelector('#hint').getBoundingClientRect(),
+            attribution=document.querySelector('.maplibregl-ctrl-attrib').getBoundingClientRect();
+          return {hintGap:box.top-hint.bottom, attributionHeight:attribution.height,
+            attributionGap:box.top-attribution.bottom, height:box.height,title:title.top-box.top,eye:eye.top-box.top,
             footHeight:foot.height,translation:new DOMMatrixReadOnly(style.transform).m42,
             visibleFoot:Math.max(0,Math.min(box.bottom-1,foot.bottom)-Math.max(box.top+1,foot.top)),
             display:style.display,visibility:style.visibility,history:panel.querySelector('#adminHistory')?
@@ -35,11 +43,22 @@ const assert = require('node:assert/strict');
       const metrics=id=>page.evaluate(id=>sheetMetrics(id),id);
       async function recordAction(id,action) {
         await page.evaluate(id=>{
-          window.motionFrames=[];window.recordMotion=true;
+          window.motionFrames=[];window.gapFrames=[];window.recordMotion=true;
+          // Sample edge gaps after layout synchronization, before paint.
+          window.motionObserver=new ResizeObserver(()=>gapFrames.push(sheetMetrics(id)));
+          motionObserver.observe(document.querySelector(id));
           const frame=()=>{motionFrames.push(sheetMetrics(id));if(recordMotion)requestAnimationFrame(frame);};frame();
         },id);
         await action();await settle();
-        return page.evaluate(()=>{recordMotion=false;return motionFrames;});
+        const result=await page.evaluate(()=>{
+          recordMotion=false;motionObserver.disconnect();return {frames:motionFrames,gaps:gapFrames};
+        });
+        assert(result.gaps.length>2, 'Samples cover the sheet motion');
+        for(const m of result.gaps) {
+          assert(Math.abs(m.hintGap-m.attributionHeight-16)<1.5, `Hint follows the visible sheet edge: ${JSON.stringify(m)}`);
+          assert(Math.abs(m.attributionGap-4)<1.5, `Attribution follows the visible sheet edge: ${JSON.stringify(m)}`);
+        }
+        return result.frames;
       }
       function verify(frames,normal,peek) {
         for (const m of frames) {
@@ -84,6 +103,10 @@ const assert = require('node:assert/strict');
           await page.locator(toggle).tap();await settle();
         }
       }
+      await page.locator('#toggle').tap();await settle();
+      for (let n=0;n<2;n++) {
+        await recordAction('#panel',()=>page.locator('#boardSwitchBtn').tap());
+      }
       await page.locator('#adminToggle').tap();await settle();
       await page.locator('#adminHistory').tap();await settle();
       assert.equal(await page.locator('#adminPanel').getAttribute('data-sheet-level'),'expanded','History opens from peek');
@@ -93,6 +116,7 @@ const assert = require('node:assert/strict');
       await page.locator('#toggle').click();await settle();
       assert.equal(await page.locator('.panel:not(.closed)').count(),2,'Desktop drawers remain independent');
       assert.equal(await page.locator('#adminTabs').evaluate(el=>getComputedStyle(el).position),'static','Desktop tabs retain normal flow');
+      if(viewport.width===390) await page.screenshot({path:'/private/tmp/mememap-sheet-desktop.png'});
       assert.deepEqual(errors,[]);
       await cdp.detach();await context.close();
     }

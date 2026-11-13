@@ -4,7 +4,7 @@
 
 ## Luồng yêu cầu
 
-Dự án là một ứng dụng web nhỏ dùng chung nguồn truy cập (same-origin). `server.py` phục vụ các trang HTML và API JSON trên cùng máy chủ và cổng; các lệnh `fetch()` trong trình duyệt dùng cookie phiên đăng nhập. Frontend dùng HTML, CSS và JavaScript thuần, tải Leaflet từ CDN và tải các ô ảnh bản đồ (tile) từ dịch vụ tile công khai của OpenStreetMap.
+Dự án là một ứng dụng web nhỏ dùng chung nguồn truy cập (same-origin). `server.py` phục vụ các trang HTML và API JSON trên cùng máy chủ và cổng; các lệnh `fetch()` trong trình duyệt dùng cookie phiên đăng nhập. Frontend dùng HTML, CSS và JavaScript thuần, tải MapLibre GL JS 6.13.0 dạng ES module từ unpkg và style/tile vector Liberty từ OpenFreeMap.
 
 ```text
 Trình duyệt
@@ -17,7 +17,7 @@ Trình duyệt
 server.py → mememap.app.Application → services → SQLite (mememap.sqlite3) + uploads/{memes,profiles}/
 ```
 
-Các trang HTML chứa cấu trúc giao diện và tải CSS/JavaScript từ file riêng. Leaflet là thư viện bản đồ duy nhất của trang bản đồ. Dự án không có bước build.
+Các trang HTML chứa cấu trúc giao diện và tải CSS/JavaScript từ file riêng. MapLibre GL JS là thư viện bản đồ duy nhất của trang bản đồ. Dự án không có bước build.
 
 | File | Trách nhiệm |
 | --- | --- |
@@ -27,7 +27,7 @@ Các trang HTML chứa cấu trúc giao diện và tải CSS/JavaScript từ fil
 | `assets/css/admin.css` | Tab Admin, bộ lọc, danh sách kết quả, thống kê, lịch sử và popup kiểm duyệt |
 | `assets/js/shared.js` | Xử lý ảnh và phương án dự phòng cho Safari, gợi ý username, quá trình đóng popup và chặn chạm đúp trên giao diện mobile |
 | `assets/js/home.js` | Giao diện tài khoản và hồ sơ trên trang chính |
-| `assets/js/map.js` | Khởi tạo Leaflet, ghép các module và sự kiện trang |
+| `assets/js/map.js` | Khởi tạo MapLibre, ghép các module và sự kiện trang |
 | `assets/js/api.js` | API client dùng chung, JSON, lỗi, phiên hết hạn và hủy yêu cầu |
 | `assets/js/map-pins.js` | Tải ghim, marker, popup và vote |
 | `assets/js/map-composer.js` | Chọn vị trí, xử lý ảnh và đăng ghim |
@@ -42,13 +42,16 @@ Các trang HTML chứa cấu trúc giao diện và tải CSS/JavaScript từ fil
 
 Bộ điều khiển bố cục quản lý trạng thái mở riêng của từng bảng và chiều cao chung của các bảng trên mobile. Khi kích thước hoặc vị trí bảng thay đổi, nó giữ nguyên tọa độ địa lý bên dưới ghim cố định. Khi kéo bản đồ bình thường, ghim vẫn đứng yên trên màn hình; nếu chọn vị trí meme khi ghim cố định đang dùng được, ghim di chuyển đến điểm đã chọn. Trên mobile, ghim này luôn dùng được ở mọi mức chiều cao, kể cả `peek`.
 
-Chỉ trên desktop, khi tất cả bảng đã đóng, việc chọn vị trí dùng một marker Leaflet tạm riêng, có animation xuất hiện riêng. Marker này giữ nguyên tọa độ đã chọn, bị ẩn khi có bảng mở và được gỡ khi đóng hoặc lưu biểu mẫu đặt ghim. Chọn vị trí khi các bảng desktop đóng không làm thay đổi vị trí ghim cố định hoặc điểm neo bố cục.
+Chỉ trên desktop, khi tất cả bảng đã đóng, việc chọn vị trí dùng một marker DOM MapLibre tạm riêng, có animation xuất hiện riêng. Marker này giữ nguyên tọa độ đã chọn, bị ẩn khi có bảng mở và được gỡ khi đóng hoặc lưu biểu mẫu đặt ghim. Chọn vị trí khi các bảng desktop đóng không làm thay đổi vị trí ghim cố định hoặc điểm neo bố cục.
 
 Trên desktop, bảng có thể nằm bên trái hoặc bên phải thông qua cấu hình `side`; ghim được căn giữa vùng còn lại giữa các bảng đang mở. Trên mobile, Menu và Admin dùng chung vị trí bảng dưới cùng, chỉ một nội dung được mở tại một thời điểm. Chuyển giữa hai nội dung giữ nguyên tọa độ neo, trạng thái nội dung và mức chiều cao gần nhất của từng bảng. Kéo bảng cập nhật chiều cao và bản đồ dựa trên tọa độ neo tuyệt đối. Trên desktop, hai bảng vẫn mở độc lập. Khi thu cửa sổ từ desktop xuống mobile, bảng được mở gần nhất được giữ lại ở mức mặc định, hoặc `peek` nếu cả hai đã đóng.
+
 
 ## Các trang
 
 ### Tương tác bảng trên mobile
+
+Trên mobile, nút đặt ghim và dòng nguồn bản đồ bám theo mép trên thực tế của bảng đang hoạt động, kể cả kéo tự do, tự về mức sau khi thả và chuyển Nông trại hào quang. ResizeObserver của bảng đồng bộ vị trí trước khi vẽ; nút chừa 16 px cộng chiều cao dòng nguồn, còn dòng nguồn kết thúc cách bảng 4 px. Ghim đặt vị trí giữ cơ chế căn chỉnh neo địa lý hiện có.
 
 Ở chiều rộng tối đa 600 px, `map-layout.js` quản lý ba mức chiều cao và quy tắc hành động dùng chung:
 
@@ -68,9 +71,9 @@ Tập trung hoặc nhập vào ô tìm kiếm Menu/Admin và chọn bộ lọc m
 
 Mở Memerboard bằng `setSubview(id, view, {onReady})` mở rộng bảng trong 250 ms và gọi `onReady` ngay để bắt đầu chuyển động ngang 280 ms cùng lúc, khôi phục tốc độ cũ. Nếu đã mở rộng, chỉ cần chuyển động ngang. Không còn lượt hiện menu con bị trì hoãn cần hủy. Chỉ nút quay lại của Memerboard gọi `setSubview(id, null, {restore:true})` để khôi phục mức menu gốc đã nhớ. Đổi Menu/Admin cùng cấp giữ riêng mức quay về này và menu con đang mở. Đóng/mở lại chính Menu đang dùng đặt mức quay về thành `default`; cách thoát khác dùng `{restore:false}`. Menu con sau này có thể dùng chung giao diện này. Trên mobile, tiêu đề và lựa chọn thành phố nằm ngoài phần kết quả có thể cuộn. Chọn ghim trong Menu thu về `default` trước khi mở popup ghim; nút bình chọn và quản lý không thu gọn bảng. Nút gợi ý đặt ghim được căn giữa và có chiều rộng theo nội dung trong vùng còn trống.
 
-Các vùng giao diện mobile dùng `touch-action: manipulation` cùng xử lý một ngón tay dùng chung để chặn lần chạm thứ hai trên cùng phần tử trong 300 ms. Áp dụng cho nút, bảng và popup trên cả hai trang, kể cả nội dung popup Leaflet. Xử lý bổ sung này bỏ qua trường nhập và vùng thao tác bản đồ; chạm nhiều ngón xóa trạng thái ghi nhận chạm. Vẫn có thể pinch zoom bản đồ. Giả lập Chromium không xác nhận hành vi Safari/iOS thật.
+Các vùng giao diện mobile dùng `touch-action: manipulation` cùng xử lý một ngón tay dùng chung để chặn lần chạm thứ hai trên cùng phần tử trong 300 ms. Áp dụng cho nút, bảng và popup trên cả hai trang, kể cả nội dung popup MapLibre. Xử lý bổ sung này bỏ qua trường nhập và vùng thao tác bản đồ; chạm nhiều ngón xóa trạng thái ghi nhận chạm. Vẫn có thể pinch zoom bản đồ. Giả lập Chromium không xác nhận hành vi Safari/iOS thật.
 
-Trên desktop và mobile, nút ghim cố định nằm trong pane `fixedPlacement` của Leaflet với `z-index:650`, trên ghim bản đồ (`600`) và dưới popup meme (`700`). Pane này bù chuyển động của pane bản đồ khi di chuyển/zoom/đặt lại để nút giữ tọa độ màn hình trong lúc kéo và zoom. Các pane đều nằm trong stacking context của bản đồ, dưới thanh đầu trang, bảng và nút giao diện. Chỉ desktop ẩn/vô hiệu hóa nút cố định khi mọi bảng đã đóng; mobile giữ nó phía trên bản thu nhỏ chỉ hiện tiêu đề.
+Trên desktop và mobile, nút ghim cố định giữ nguyên giao diện, nằm trong lớp phủ màn hình với `z-index:650`, trên marker DOM MapLibre (`600`) và dưới popup meme (`700`). Lớp phủ giữ tọa độ màn hình khi kéo/zoom mà không cần bù pane của engine. Các thành phần nằm trong stacking context cô lập của bản đồ, dưới thanh đầu trang, bảng và nút giao diện. Ghim emoji xanh, ghim đặt vị trí màu đỏ đậm (`#d62f1f`), nội dung popup và hành vi drawer/sheet được giữ lại. Chỉ desktop ẩn/vô hiệu hóa nút cố định khi mọi bảng đã đóng; mobile giữ nó phía trên bản thu nhỏ chỉ hiện tiêu đề.
 
 Chiều cao trang mobile giữ bằng mức trước khi mở bàn phím trong lúc trường của bảng đang được tập trung, và trong lúc đóng bàn phím nếu vùng hiển thị vẫn ngắn hơn trên 120 px. Bảng mở rộng ngay khi tập trung vào ô nhập để đưa ô tìm kiếm lên cao trước khi bàn phím xuất hiện. Trang không nâng phần chân bảng lên trên bàn phím; bàn phím có thể che kết quả phía dưới và phần chân bảng cho đến khi đóng. Sau đó trang tiếp tục theo thay đổi kích thước thông thường; đổi chiều rộng vẫn cập nhật bố cục responsive. Trang mobile được cố định và khóa cuộn bên ngoài, còn danh sách kết quả vẫn cuộn được. Việc nhận diện bàn phím dùng ngưỡng ước lượng vì [visual viewport](https://developer.mozilla.org/en-US/docs/Web/API/VisualViewport) có thể đổi độc lập với layout viewport. Giả lập viewport Chromium không xác nhận hành vi bàn phím Safari/iOS/Android thật; cần thử trên các thiết bị đó trước khi phát hành.
 
@@ -86,15 +89,17 @@ Nút Menu và Admin nằm cùng hàng bên dưới thanh thao tác trên cùng. 
 
 Trên desktop, mép trên các bảng thẳng hàng với hàng nút; khi mở, nút nằm cạnh mép trong của bảng tương ứng, khi đóng thì trở về mép ngoài màn hình. Nếu cửa sổ nhỏ và cả hai bảng cùng mở, các bảng thu hẹp để chừa chỗ cho nút ở giữa. Trên mobile, các nút vẫn nằm dưới thanh trên cùng và chuyển giữa Menu/Admin trong một bảng dưới cùng, khôi phục mức gần nhất riêng của từng bảng cùng cấp. Nhấn nút của nội dung đang mở thu về mức nhỏ nhất chỉ hiện tiêu đề; nhấn lại nút đó mở ở mức mặc định. Nút zoom nằm dưới hàng nút trên mobile; phần ghi nguồn bản đồ nằm ở dưới cùng bản đồ.
 
-Bản đồ bắt đầu tại vĩ độ `20.9893`, kinh độ `105.7953`, mức zoom `18`. Trang hỗ trợ xem bản đồ, tạo và xem ghim, xem hồ sơ, bình chọn aura, Memerboard Hà Nội và bảng Admin. Backend cũng kiểm tra phạm vi bản đồ khi tạo ghim: vĩ độ `20.09`–`21.89`, kinh độ `104.83`–`106.76`.
+Bản đồ bắt đầu tại vĩ độ `20.9893`, kinh độ `105.7953`, mức zoom API/cũ `18` (zoom MapLibre `17`). Trang hỗ trợ xem bản đồ, tạo và xem ghim, xem hồ sơ, bình chọn aura, Memerboard Hà Nội và bảng Admin. Backend cũng kiểm tra phạm vi bản đồ khi tạo ghim: vĩ độ `20.09`–`21.89`, kinh độ `104.83`–`106.76`.
 
-Chọn ghim từ danh sách ghim trong Menu đưa bản đồ đến ghim và mở popup. Mức zoom là giá trị lớn hơn giữa zoom hiện tại và `zoom` mặc định từ `/api/map-config`: giữ mức đang phóng lớn hơn, còn mức đang thu nhỏ hơn được nâng về mặc định đã cấu hình. Bộ điều khiển ghim nhận mức mặc định từ phần ghép trang thay vì ghi cố định một mức zoom.
+Chọn ghim từ danh sách ghim trong Menu đưa bản đồ đến ghim và mở popup. Mức zoom là giá trị lớn hơn giữa zoom hiện tại và `zoom` mặc định từ `/api/map-config`, quy đổi bằng cách trừ một: giữ mức đang phóng lớn hơn, còn mức đang thu nhỏ hơn được nâng về mặc định đã cấu hình. Bộ điều khiển ghim nhận mức mặc định từ phần ghép trang thay vì ghi cố định một mức zoom.
 
 Bảng Admin mặc định mở Tổng quan, cùng các tab Meme, Báo cáo và Người dùng. Lịch sử là màn hình con có nút quay lại. Tab và bộ lọc được giữ trong bộ nhớ của trang, không được lưu qua lần tải lại. Chỉ phiên admin được đọc dữ liệu quản trị; thành viên đã đăng nhập gửi báo cáo từ meme. `admin.js` và `admin.css` được tải trên trang bản đồ. Bảng Admin và popup thao tác hỗ trợ cả tiếng Việt lẫn tiếng Anh, dùng chung animation popup hiện có.
 
+HTML popup được ghi nhớ theo marker, nên refresh feed không đổi tái sử dụng cả marker và nội dung; vote và thay đổi ngôn ngữ/nội dung vẫn cập nhật popup đang mở.
+
 Ghim được tải khi mở trang và cập nhật mỗi 10 giây khi tab đang hiển thị. Bảng xếp hạng cập nhật cùng chu kỳ khi bảng đó mở. Lựa chọn ngôn ngữ được lưu trong `localStorage`; cờ mở hướng dẫn chào mừng một lần sau đăng ký dùng `sessionStorage`.
 
-Leaflet và CSS của nó được tải từ CDN unpkg. Leaflet tải tile từ `https://tile.openstreetmap.org/{z}/{x}/{y}.png`. Nguồn bản đồ được ghi trên giao diện. Ứng dụng không đóng gói sẵn các tile. Kiểm tra chính sách sử dụng hiện hành của nhà cung cấp trước khi chạy công khai hoặc ở quy mô lớn; dịch vụ tile công khai tiêu chuẩn không phải nguồn để tải hàng loạt hoặc phục vụ bản đồ từ máy chủ riêng.
+MapLibre 6.13.0 và CSS được chốt phiên bản trên unpkg; thư viện ESM tự xác định worker cùng phiên bản qua Blob URL. `/api/map-config` bổ sung URL `style` Liberty OpenFreeMap; field `tiles` cũ được giữ để tương thích. Giá trị vĩ độ/kinh độ API chỉ được đổi sang kinh độ/vĩ độ tại ranh giới MapLibre. Trừ một từ zoom cũ giữ thang pixel Mercator (tile thế giới 512 px so với 256 px). Tắt thao tác xoay/nghiêng để giữ giao diện bản đồ phẳng. Attribution lấy từ nguồn style qua control MapLibre. Attribution nằm trên sheet mobile và trong vùng bản đồ còn lại trên desktop; hint chừa chiều cao attribution mà không dời ghim đặt vị trí. Ứng dụng không đóng gói dữ liệu bản đồ. Lỗi module/CSS/khởi tạo, style/tile/worker và mất WebGL context hiện thông báo song ngữ; tải lại sau khi kiểm tra kết nối/trình duyệt. Khi hủy trang, bộ hẹn giờ refresh và map được gỡ. Đọc tài liệu [MapLibre](https://maplibre.org/maplibre-gl-js/docs/) và [OpenFreeMap](https://openfreemap.org/quick_start/) trước khi đổi dependency hoặc chính sách hosting.
 
 Icon đầu trang là `assets/icon-128x.png`; icon tab là `assets/icon-64x.png`. Cả hai nằm trong danh sách tài nguyên máy chủ cho phép phục vụ.
 
@@ -167,4 +172,4 @@ Tổng meme/aura của hồ sơ được tính trên backend từ toàn bộ ghi
 
 `regions.py` là nguồn cấu hình phạm vi hiện tại. Frontend lấy cấu hình qua `/api/map-config`; tạo ghim dùng cùng phạm vi tại backend. Vùng đăng ghim và vùng Memerboard Hà Nội vẫn là hai hình chữ nhật khác nhau, giữ nguyên hành vi cũ. Đây chưa phải ranh giới hành chính hoặc quyền community.
 
-Community tiếp theo cần tách quan hệ địa lý khỏi membership: tối đa một cộng đồng mỗi cấp, phường nơi sống và trường được chọn độc lập. Local/guest sẽ được backend xác định theo cộng đồng; cả hai đều yêu cầu đăng nhập. Refactor này chưa tạo bảng membership, polygon, quyền local/guest hay ứng dụng Android/iOS. Leaflet và tile hiện tại được giữ nguyên.
+Community tiếp theo cần tách quan hệ địa lý khỏi membership: tối đa một cộng đồng mỗi cấp, phường nơi sống và trường được chọn độc lập. Local/guest sẽ được backend xác định theo cộng đồng; cả hai đều yêu cầu đăng nhập. Refactor này chưa tạo bảng membership, polygon, quyền local/guest hay ứng dụng Android/iOS. Bản đồ hiện dùng MapLibre/OpenFreeMap; tính năng cộng đồng vẫn là đề xuất riêng.

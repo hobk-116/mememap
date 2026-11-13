@@ -4,7 +4,7 @@
 
 ## Request flow
 
-The project is a small same-origin web application. `server.py` serves the HTML pages and JSON API from one host and port; browser `fetch()` calls use the session cookie. The front end is plain HTML, CSS, and JavaScript, with Leaflet loaded from a CDN and map tiles loaded from OpenStreetMap's public tile endpoint.
+The project is a small same-origin web application. `server.py` serves the HTML pages and JSON API from one host and port; browser `fetch()` calls use the session cookie. The front end is plain HTML, CSS, and JavaScript, with MapLibre GL JS 6.13.0 loaded as an ES module from unpkg and the Liberty vector style/tiles loaded from OpenFreeMap.
 
 ```text
 Browser
@@ -17,7 +17,7 @@ Browser
 server.py → mememap.app.Application → services → SQLite (mememap.sqlite3) + uploads/{memes,profiles}/
 ```
 
-The HTML pages provide markup and load separate styles/scripts. Leaflet is the only map library used by the map page. There is no build step.
+The HTML pages provide markup and load separate styles/scripts. MapLibre GL JS is the only map library used by the map page. There is no build step.
 
 | File | Responsibility |
 | --- | --- |
@@ -27,7 +27,7 @@ The HTML pages provide markup and load separate styles/scripts. Leaflet is the o
 | `assets/css/admin.css` | Admin tabs, filters, result lists, summaries, history and moderation popup |
 | `assets/js/shared.js` | Image processing and Safari fallback, username suggestion, popup close lifecycle and mobile double-tap guard |
 | `assets/js/home.js` | Account UI and main-page profile |
-| `assets/js/map.js` | Initialize Leaflet, compose modules and page events |
+| `assets/js/map.js` | Initialize MapLibre, compose modules and page events |
 | `assets/js/api.js` | Shared API client, JSON, errors, expired sessions and cancellation |
 | `assets/js/map-pins.js` | Pin loading, markers, popups and votes |
 | `assets/js/map-composer.js` | Location selection, image preparation and posting |
@@ -40,11 +40,14 @@ The HTML pages provide markup and load separate styles/scripts. Leaflet is the o
 | `mememap/{app,config,database,migrations,media,regions,errors}.py` | Application composition, settings and foundation services |
 | `moderation.py` | Compatibility imports for existing local tools |
 
-The layout controller owns an independent set of open drawers and the shared sheet height. It preserves the geographic point underneath the fixed pin when drawer geometry changes. Normal map panning keeps the pin fixed on screen; choosing a meme location moves it to the selected point whenever the fixed pin is available. It remains available at every mobile sheet level, including `peek`. Only on desktop, with all drawers closed, selection uses a separate temporary Leaflet marker with its own appearance animation. This marker stays at the chosen coordinates, is hidden while any drawer is open, and is removed when the composer closes or saves. Desktop closed-drawer selection does not change the fixed pin's position or layout anchor. Desktop drawers support left and right placement through the `side` setting; the pin is centered between the open panels. On mobile, Menu and Admin occupy the same bottom sheet, with only one active at a time. Switching preserves the geographic anchor, each view's content state and that view's last height level. Dragging updates its height and the map from an absolute geographic anchor. Desktop drawers remain independent. Resizing from desktop to mobile keeps the most recently opened drawer active at the default level, or `peek` if both were closed.
+The layout controller owns an independent set of open drawers and the shared sheet height. It preserves the geographic point underneath the fixed pin when drawer geometry changes. Normal map panning keeps the pin fixed on screen; choosing a meme location moves it to the selected point whenever the fixed pin is available. It remains available at every mobile sheet level, including `peek`. Only on desktop, with all drawers closed, selection uses a separate temporary MapLibre DOM marker with its own appearance animation. This marker stays at the chosen coordinates, is hidden while any drawer is open, and is removed when the composer closes or saves. Desktop closed-drawer selection does not change the fixed pin's position or layout anchor. Desktop drawers support left and right placement through the `side` setting; the pin is centered between the open panels. On mobile, Menu and Admin occupy the same bottom sheet, with only one active at a time. Switching preserves the geographic anchor, each view's content state and that view's last height level. Dragging updates its height and the map from an absolute geographic anchor. Desktop drawers remain independent. Resizing from desktop to mobile keeps the most recently opened drawer active at the default level, or `peek` if both were closed.
 
 ## Pages
 
+
 ### Mobile sheet interactions
+
+On mobile, the placement hint and attribution follow the active sheet’s rendered top edge, including free dragging, release snapping and Memerboard transitions. A sheet ResizeObserver synchronizes their positions before paint; the hint reserves 16 px plus attribution height, and attribution ends 4 px above the sheet. The placement pin keeps its existing geographic-anchor alignment.
 
 At widths up to 600 px, `map-layout.js` owns three sheet levels and their shared action rules:
 
@@ -64,9 +67,9 @@ Focusing or typing in Menu/Admin search fields and selecting a filter expand the
 
 Opening Memerboard with `setSubview(id, view, {onReady})` expands the sheet for 250 ms and calls `onReady` immediately to start its 280 ms horizontal slide at the same time, restoring the original animation speed. If already expanded, only the slide is needed. There is no delayed reveal to cancel. Only the Memerboard return button calls `setSubview(id, null, {restore:true})` to restore the saved main-view level. Sibling Menu/Admin switches preserve this separate return level and the open subview. Closing/reopening the active Menu resets the return level to `default`; other exits use `{restore:false}`. Future subviews can reuse this interface. On mobile, the leaderboard heading and city selector remain outside the scrollable results. Selecting a pin from the Menu collapses to `default` before opening its popup; voting and moderation controls do not collapse it. The placement hint is centered and fits its text within the available width.
 
-Mobile UI surfaces use `touch-action: manipulation` and a shared single-touch fallback that suppresses a second tap on the same UI element within 300 ms. This covers both pages' buttons, sheets and popups, including Leaflet popup content. Editable fields and the map's gesture surface are excluded from the fallback; multi-touch clears its tap state. Map pinch zoom remains available. Chromium emulation does not establish native Safari/iOS behavior.
+Mobile UI surfaces use `touch-action: manipulation` and a shared single-touch fallback that suppresses a second tap on the same UI element within 300 ms. This covers both pages' buttons, sheets and popups, including MapLibre popup content. Editable fields and the map's gesture surface are excluded from the fallback; multi-touch clears its tap state. Map pinch zoom remains available. Chromium emulation does not establish native Safari/iOS behavior.
 
-On desktop and mobile, the fixed placement button lives in Leaflet's `fixedPlacement` pane at `z-index:650`, above map markers (`600`) and below meme popups (`700`). This pane offsets the map pane's translation on move/zoom/reset so the button keeps screen coordinates during panning and zooming. All of these panes remain inside the map's stacking context, below the app header, sheets and screen buttons. Only desktop hides/disables the fixed button when all drawers are closed; mobile keeps it above the heading-only preview.
+On desktop and mobile, the unchanged fixed placement button lives in a screen overlay at `z-index:650`, above MapLibre DOM markers (`600`) and below meme popups (`700`). It stays at screen coordinates during panning and zooming without compensating an engine pane. These elements remain inside the map's isolated stacking context, below the app header, sheets and screen buttons. The existing green emoji markers, dark red placement pin (`#d62f1f`), popup content and drawer/sheet behavior are retained. Only desktop hides/disables the fixed button when all drawers are closed; mobile keeps it above the heading-only preview.
 
 Mobile page height is held at its pre-keyboard value while a sheet input is focused, and through keyboard closing while the visual viewport remains over 120 px shorter. The sheet expands immediately on input focus so its search field is higher before the keyboard opens. The page does not lift its footer above the keyboard; the keyboard may cover lower results and the footer until dismissed. Normal viewport resizing resumes afterward, and width changes still update the responsive layout. The mobile document is fixed with outer scrolling disabled, while result lists retain scrolling. Keyboard detection is heuristic because the [visual viewport](https://developer.mozilla.org/en-US/docs/Web/API/VisualViewport) can change independently of the layout viewport. Chromium viewport simulations do not establish native Safari/iOS/Android keyboard behavior; verify those devices before release.
 
@@ -80,15 +83,17 @@ On both pages, opening the signed-in user's profile from the header profile icon
 
 The Menu and Admin toggles sit on the same row below the top action bar. Both use the same button shape and corner radius; Admin is visible only to admins. On desktop, Menu and Admin open and close independently and may be visible together. On desktop, the panels' top edges align with the toggle row; the buttons sit beside the inner edges of their open panels and return to the outer screen edges when closed. Panels narrow on smaller windows when both are open, leaving room for the buttons between them. On mobile, the buttons stay below the top bar and switch between Menu and Admin in one bottom sheet, restoring each sibling view's own last level. Pressing the active view's button reduces it to the heading-only peek level; pressing it again reopens at default height. Zoom controls are positioned below the button row on mobile, while attribution remains at the bottom of the map.
 
-The map page starts at latitude `20.9893`, longitude `105.7953`, zoom `18`. It provides map browsing, pin creation, pin details, user profile views, aura votes, the Hà Nội Memerboard, and an admin dashboard. The map's current bounds are also enforced by the backend when creating pins: latitude `20.09`–`21.89` and longitude `104.83`–`106.76`.
+The map page starts at latitude `20.9893`, longitude `105.7953`, legacy/API zoom `18` (MapLibre zoom `17`). It provides map browsing, pin creation, pin details, user profile views, aura votes, the Hà Nội Memerboard, and an admin dashboard. The map's current bounds are also enforced by the backend when creating pins: latitude `20.09`–`21.89` and longitude `104.83`–`106.76`.
 
-Selecting a pin from the Menu's pin list moves the map to that pin and opens its popup. The zoom becomes the higher of the current zoom and the default `zoom` supplied by `/api/map-config`: closer views are preserved, while wider views are raised to the configured default. The pin controller receives that default from the page composition rather than hard-coding a zoom level.
+Selecting a pin from the Menu's pin list moves the map to that pin and opens its popup. The zoom becomes the higher of the current zoom and the default `zoom` supplied by `/api/map-config`, converted by subtracting one: closer views are preserved, while wider views are raised to the configured default. The pin controller receives that default from the page composition rather than hard-coding a zoom level.
 
 The dashboard initially opens Overview and exposes Memes, Reports, and Users as sibling tabs. History is a subview with a back action. Tabs and filters are held in page memory, not saved across page reloads. Administrative reads are enabled only for an admin session; signed-in members use the reporting form from a meme. `admin.js` and `admin.css` are loaded on the map page, while the home page remains separate. The dashboard and its action popup support both Vietnamese and English and share the existing popup animation.
 
+Popup HTML is cached per marker, so an unchanged feed refresh reuses both the marker and its content; votes and language/content changes still update the active popup.
+
 Pins are fetched at page load and refreshed every 10 seconds while the tab is visible. The leaderboard is refreshed on the same interval while its panel is open. The browser stores the language choice in `localStorage`; the one-time welcome-guide flag after registration uses `sessionStorage`.
 
-Leaflet and its CSS are loaded from the unpkg CDN. Leaflet loads tiles from `https://tile.openstreetmap.org/{z}/{x}/{y}.png`. Attribution is rendered on the map. This app does not bundle the map tiles. Check the tile provider's current usage policy before running the site publicly or at significant scale; the standard public tile service is not a bulk-download or self-hosting source.
+MapLibre 6.13.0 and its CSS are pinned on unpkg; the ESM library resolves its matching worker through a Blob URL. `/api/map-config` adds the OpenFreeMap Liberty `style` URL; the legacy `tiles` field remains for compatibility. API latitude/longitude values are converted to longitude/latitude only at the MapLibre boundary. Subtracting one from legacy zoom values preserves the Mercator pixel scale (512 px versus 256 px world tiles). Rotation and pitch gestures are disabled to retain the flat map UI. Attribution comes from the style sources through MapLibre's attribution control. It is placed above the mobile sheet and inside the available desktop map area; the hint reserves its height without moving the placement pin. The app does not bundle map data. Module/CSS/initialization, style/tile/worker and WebGL context-loss errors show bilingual map feedback; reload after checking connectivity/browser support. Page teardown clears the refresh timer and removes the map. Check [MapLibre](https://maplibre.org/maplibre-gl-js/docs/) and [OpenFreeMap](https://openfreemap.org/quick_start/) documentation before changing the pinned dependencies or hosting policy.
 
 The UI header icon is `assets/icon-128x.png`; the tab icon is `assets/icon-64x.png`. Both are explicitly allow-listed in the server's asset route.
 
@@ -161,4 +166,4 @@ Profile meme/aura totals come from all visible pins belonging to the author in t
 
 `regions.py` supplies the current scopes. The frontend reads `/api/map-config`; pin creation enforces the same posting bounds on the backend. Posting and Hà Nội leaderboard rectangles remain deliberately distinct to preserve existing behavior. They are not administrative polygons or community permissions.
 
-Future community work must separate geography from membership: at most one community per level, with home ward and school chosen independently. The backend will determine local/guest for each community, and both require login. This refactor does not add memberships, polygons, local/guest permissions or Android/iOS apps. Leaflet and the current tiles remain in use.
+Future community work must separate geography from membership: at most one community per level, with home ward and school chosen independently. The backend will determine local/guest for each community, and both require login. This refactor does not add memberships, polygons, local/guest permissions or Android/iOS apps. The current map uses MapLibre/OpenFreeMap; community features remain separate proposals.

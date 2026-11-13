@@ -31,22 +31,21 @@
     const syncViewportHeight = () => document.documentElement.style.setProperty('--app-viewport-height', `${viewportHeight()}px`);
     syncViewportHeight();
     const fixedPinAvailable = () => mobile || Boolean(openDrawers.size);
-    // Keep the screen anchor inside Leaflet's stacking order, between markers and popups.
-    const fixedPane = map.createPane('fixedPlacement');
-    fixedPane.style.zIndex = '650';
-    fixedPane.style.pointerEvents = 'none';
-    const syncFixedPane = () => L.DomUtil.setPosition(fixedPane, map.containerPointToLayerPoint(L.point(0, 0)));
-    map.on('move zoomend viewreset', syncFixedPane);
-    syncFixedPane();
+    // A screen overlay inside the map's stacking context, between markers and popups.
+    const fixedPane = document.createElement('div');
+    fixedPane.className = 'fixed-placement-layer';
+    map.getContainer().append(fixedPane);
     const pin = document.createElement('button');
     pin.type = 'button';
     pin.className = 'fixed-pending-pin';
     pin.textContent = '＋';
-    L.DomEvent.disableClickPropagation(pin);
+    for (const type of ['mousedown', 'dblclick', 'touchstart']) {
+      pin.addEventListener(type, event => event.stopPropagation());
+    }
     pin.addEventListener('click', event => {
       event.stopPropagation();
       if (!fixedPinAvailable() || !point || isComposing()) return;
-      onPlacePin?.(map.containerPointToLatLng(point));
+      onPlacePin?.(map.unproject(point));
     });
     fixedPane.append(pin);
 
@@ -64,7 +63,7 @@
     const clampHeight = value => Math.max(minimum(), Math.min(maximum(), value));
     const sheetInset = () => sheetRules.inset + (sheetRules.peekInset - sheetRules.inset) *
       Math.max(0, Math.min(1, (defaultHeight() - sheetSize) / Math.max(1, defaultHeight() - minimum())));
-    const copyAnchor = () => anchor && L.latLng(anchor.lat, anchor.lng);
+    const copyAnchor = () => anchor && {lat: anchor.lat, lng: anchor.lng};
 
     function stopAlignment() {
       cancelAnimationFrame(frame);
@@ -80,20 +79,13 @@
         return;
       }
       if (!interactivePin) {
-        interactivePin = L.marker(selected, {
-          interactive: false,
-          keyboard: false,
-          zIndexOffset: 650,
-          icon: L.divIcon({
-            className: 'interactive-pending-marker',
-            html: '<span class="interactive-pending-pin" aria-hidden="true">＋</span>',
-            iconSize: [42, 42],
-            iconAnchor: [21, 40],
-          }),
-        });
+        const element = document.createElement('div');
+        element.className = 'interactive-pending-marker';
+        element.innerHTML = '<span class="interactive-pending-pin" aria-hidden="true">＋</span>';
+        interactivePin = new MemeMap.maplibregl.Marker({element, anchor: 'top-left', offset: [-21, -40],
+          subpixelPositioning: true});
       }
-      interactivePin.setLatLng(selected);
-      if (!map.hasLayer(interactivePin)) interactivePin.addTo(map);
+      interactivePin.setLngLat(selected).addTo(map);
     }
 
     function selectLocation(latlng) {
@@ -103,7 +95,7 @@
       if (selectionKind === 'interactive') return;
       stopAlignment();
       anchor = latlng;
-      placePin(map.latLngToContainerPoint(latlng), true);
+      placePin(map.project(latlng), true);
     }
 
     function resetSelection() {
@@ -112,12 +104,13 @@
       interactivePin?.remove();
       if (wasInteractive) return;
       placePin(geometry().point, true);
-      anchor = map.containerPointToLatLng(point);
+      anchor = map.unproject(point);
     }
 
     function geometry() {
-      const size = map.getSize();
-      const center = L.point(size.x / 2, size.y / 2);
+      const container = map.getContainer();
+      const size = {x: container.clientWidth, y: container.clientHeight};
+      const center = {x: size.x / 2, y: size.y / 2};
       const top = mobile ? 74 : 94;
       let left = mobile ? 8 : 14;
       let adminRight = mobile ? 8 : 14;
@@ -126,7 +119,8 @@
       let visibleRight = size.x;
       if (mobile) {
         const visibleSheetSize = Math.min(sheetSize, maximum());
-        hintBottom = sheetInset() + visibleSheetSize + 12;
+        hintBottom = sheetInset() + visibleSheetSize + 16 +
+          (map.getContainer().querySelector('.maplibregl-ctrl-attrib')?.offsetHeight || 0);
         center.y = Math.max(0, (size.y - sheetInset() - visibleSheetSize) / 2);
       } else {
         for (const id of openDrawers) {
@@ -147,7 +141,7 @@
     }
 
     function placePin(next, animate = false) {
-      point = L.point(next);
+      point = {...next};
       pin.style.transition = animate ? 'left .25s ease, top .25s ease, opacity .25s ease' : 'opacity .25s ease';
       pin.style.left = `${point.x - 21}px`;
       pin.style.top = `${point.y - 40}px`;
@@ -161,6 +155,16 @@
         rightButton.style.top = `${target.top}px`;
         rightButton.style.right = `${target.adminRight}px`;
       }
+      const attributionHeight = map.getContainer().querySelector('.maplibregl-ctrl-attrib')?.offsetHeight || 0;
+      if (mobile) {
+        // Follow the rendered edge, including CSS transitions and interrupted drags.
+        const mapBox = map.getContainer().getBoundingClientRect();
+        const sheetBox = drawers[activeMobileDrawer].panel.getBoundingClientRect();
+        target = {...target, hintBottom: mapBox.bottom - sheetBox.top + 16 + attributionHeight};
+      }
+      map.getContainer().style.setProperty('--map-attribution-bottom', `${mobile ? Math.max(0, target.hintBottom-attributionHeight-12) : 0}px`);
+      map.getContainer().style.setProperty('--map-attribution-right', `${mobile ? 8 : Math.max(0, target.adminRight-14)}px`);
+      map.getContainer().style.setProperty('--map-attribution-width', `${target.hintWidth}px`);
       hint.style.bottom = `${target.hintBottom}px`;
       hint.style.left = `${target.hintLeft}px`;
       hint.style.maxWidth = `${target.hintWidth}px`;
@@ -171,8 +175,9 @@
       placePin(next);
       if (fixedAnchor) {
         // Compute from an absolute anchor, never accumulated rounded pan deltas.
-        const center = map.project(fixedAnchor).subtract(next.subtract(map.getSize().divideBy(2)));
-        map.setView(map.unproject(center), map.getZoom(), {animate: false});
+        const container = map.getContainer();
+        map.easeTo({center: fixedAnchor, offset: [next.x - container.clientWidth / 2,
+          next.y - container.clientHeight / 2], duration: 0});
       }
       moving = false;
     }
@@ -184,16 +189,16 @@
       if (isComposing() && selectionKind !== 'interactive') {
         placeGroup(target);
         const selected = getSelected();
-        if (selected) placePin(map.latLngToContainerPoint(selected));
+        if (selected) placePin(map.project(selected));
         return Promise.resolve(true);
       }
       if (!animate || !point) {
         placeGroup(target);
         placeMap(target.point, fixedAnchor);
-        anchor = map.containerPointToLatLng(point);
+        anchor = map.unproject(point);
         return Promise.resolve(true);
       }
-      const start = L.point(point);
+      const start = {...point};
       const startTop = parseFloat(group.style.top) || target.top;
       const startLeft = parseFloat(group.style.left) || target.left;
       const startAdminRight = parseFloat(rightButton?.style.right) || target.adminRight;
@@ -210,11 +215,12 @@
           hintBottom: startBottom + (target.hintBottom - startBottom) * eased,
           hintLeft: startHintLeft + (target.hintLeft - startHintLeft) * eased,
           hintWidth: startHintWidth + (target.hintWidth - startHintWidth) * eased});
-        placeMap(start.add(target.point.subtract(start).multiplyBy(eased)), fixedAnchor);
+        placeMap({x: start.x + (target.point.x - start.x) * eased,
+          y: start.y + (target.point.y - start.y) * eased}, fixedAnchor);
         if (progress < 1) frame = requestAnimationFrame(tick);
         else {
           frame = 0;
-          anchor = map.containerPointToLatLng(point);
+          anchor = map.unproject(point);
           resolveAlignment?.(true);
           resolveAlignment = null;
         }
@@ -386,7 +392,11 @@
       align(true, finished.anchor);
     }
 
+    const sheetObserver = new ResizeObserver(() => {
+      if (mobile) placeGroup(geometry());
+    });
     for (const [id, drawer] of Object.entries(drawers)) {
+      sheetObserver.observe(drawer.panel);
       const footer = drawer.panel.querySelector('.panel-switch,.admin-tabs');
       if (footer) {
         const observer = new ResizeObserver(() => {
@@ -442,11 +452,13 @@
       document.addEventListener(event, finishDrag, true);
     }
 
-    map.on('move zoomend', () => {
+    const onMapMove = () => {
       if (moving || frame) return;
-      if (isComposing() && selectionKind !== 'interactive' && getSelected()) placePin(map.latLngToContainerPoint(getSelected()));
-      else if (point) anchor = map.containerPointToLatLng(point);
-    });
+      if (isComposing() && selectionKind !== 'interactive' && getSelected()) placePin(map.project(getSelected()));
+      else if (point) anchor = map.unproject(point);
+    };
+    map.on('move', onMapMove);
+    map.on('zoomend', onMapMove);
     function handleViewportResize() {
       const nextHeight = window.visualViewport?.height || innerHeight;
       const inputFocused = document.activeElement?.matches(inputSelector);
@@ -475,10 +487,11 @@
           if (mobile && openDrawers.size) activeMobileDrawer = [...openDrawers].pop();
           sheetLevel = openDrawers.size ? 'default' : 'peek';
           sheetSize = levelHeights()[sheetLevel];
-          zoomControl.setPosition(mobile ? 'topright' : 'bottomright');
+          map.removeControl(zoomControl);
+          map.addControl(zoomControl, mobile ? 'top-right' : 'bottom-right');
         } else if (mobile) sheetSize = levelHeights()[sheetLevel];
         moving = true;
-        map.invalidateSize({pan: false});
+        map.resize();
         moving = false;
         render();
         align(false, fixedAnchor);
@@ -496,13 +509,14 @@
       setSubview,
       toggle: id => setOpen(id, !openDrawers.has(id)),
       refresh: () => { render(); placeGroup(geometry()); },
-      center: () => map.containerPointToLatLng(geometry().point),
+      center: () => map.unproject(geometry().point),
       focus: (latlng, zoom = map.getZoom()) => {
         stopAlignment();
         map.stop();
         const target = geometry().point;
-        const center = map.project(latlng, zoom).subtract(target.subtract(map.getSize().divideBy(2)));
-        map.setView(map.unproject(center, zoom), zoom, {animate: false});
+        const container = map.getContainer();
+        map.easeTo({center: latlng, zoom, offset: [target.x - container.clientWidth / 2,
+          target.y - container.clientHeight / 2], duration: 0});
       },
       select: selectLocation,
       reset: resetSelection,

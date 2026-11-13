@@ -1,10 +1,10 @@
 /* Feature controller; composed by map.js. */
 (() => {
-  function createMapPins({map, defaultZoom, pinIcon, api, tr, escapeHtml, restrictionMessage, onAccess, onRefreshed, onChanged, onManage, onReport, onProfile, onSelected}) {
+  function createMapPins({map, defaultZoom, api, tr, escapeHtml, restrictionMessage, onAccess, onRefreshed, onChanged, onManage, onReport, onProfile, onSelected}) {
     let pins = [], pinsRevision = 0, pinsLoading = false, pinsReloadRequested = false;
     const pendingVotes = new Set();
-    const markers = L.layerGroup().addTo(map);
     const pinMarkers = new Map();
+    const popupContents = new WeakMap();
     function voteControls(pin) {
       const disabled = pin.is_owner ? `disabled title="${escapeHtml(tr('ownPin'))}"` : '';
       return `<div class="aura-controls"><span class="aura-score">${escapeHtml(tr('aura'))}: <b>${pin.aura}</b></span><button class="vote-button ${pin.viewer_vote === 1 ? 'selected' : ''}" type="button" data-vote="${pin.id}" data-value="1" ${disabled}>+aura</button><button class="vote-button ${pin.viewer_vote === -1 ? 'selected' : ''}" type="button" data-vote="${pin.id}" data-value="-1" ${disabled}>−aura</button></div>`;
@@ -15,26 +15,28 @@
     }
 
     function renderPins(preservePopupId = null) {
-      const activePopupId = preservePopupId ?? [...pinMarkers].find(([, marker]) => marker.isPopupOpen())?.[0] ?? null;
+      const activePopupId = preservePopupId ?? [...pinMarkers].find(([, marker]) => marker.getPopup().isOpen())?.[0] ?? null;
       const query = document.getElementById('search').value.trim().toLocaleLowerCase();
       const filtered = pins.filter(pin => `${pin.title} ${pin.story} ${pin.username}`.toLocaleLowerCase().includes(query));
       document.getElementById('count').textContent = String(pins.length).padStart(2, '0');
       document.getElementById('list').innerHTML = filtered.length ? filtered.map(pin => `<article class="pin-row"><button class="pin-summary" type="button" data-open-pin="${pin.id}"><span class="pin-emoji"><span>📍</span></span><span><strong>${escapeHtml(pin.title)}</strong><small>@${escapeHtml(pin.username)}</small></span></button>${pin.can_delete ? `<button class="delete-pin" type="button" data-manage-pin="${pin.id}" title="${escapeHtml(tr('managePin'))}" aria-label="${escapeHtml(tr('managePin'))}">⋯</button>` : ''}${voteControls(pin)}</article>`).join('') : `<div class="empty">${escapeHtml(pins.length ? tr('noResults') : tr('empty'))}</div>`;
       const currentIds = new Set(pins.map(pin => pin.id));
       for (const [id, marker] of pinMarkers) {
-        if (!currentIds.has(id)) { markers.removeLayer(marker); pinMarkers.delete(id); }
+        if (!currentIds.has(id)) { marker.remove(); pinMarkers.delete(id); }
       }
       pins.forEach(pin => {
         let marker = pinMarkers.get(pin.id);
         const content = pinPopup(pin);
         if (!marker) {
-          marker = L.marker([pin.lat, pin.lng], {icon: pinIcon}).bindPopup(content).addTo(markers);
+          marker = MemeMap.createPinMarker([pin.lng, pin.lat], content);
           pinMarkers.set(pin.id, marker);
-        } else if (marker.getPopup().getContent() !== content) {
-          marker.setPopupContent(content);
+        } else if (popupContents.get(marker) !== content) {
+          marker.getPopup().setHTML(content);
         }
+        popupContents.set(marker, content);
+        marker.getElement().setAttribute('aria-label', pin.title);
         pin.marker = marker;
-        if (pin.id === activePopupId && !marker.isPopupOpen()) marker.openPopup();
+        if (pin.id === activePopupId && !marker.getPopup().isOpen()) marker.togglePopup();
       });
     }
 
@@ -47,7 +49,7 @@
       try {
         const data = await api.request('/api/pins');
         if (revisionAtStart === pinsRevision) {
-          const activePopupId = [...pinMarkers].find(([, marker]) => marker.isPopupOpen())?.[0] ?? null;
+          const activePopupId = [...pinMarkers].find(([, marker]) => marker.getPopup().isOpen())?.[0] ?? null;
           pins = data.pins || [];
           onAccess(Boolean(data.can_delete_pins));
           renderPins(activePopupId);
@@ -100,8 +102,8 @@
         const pin = pins.find(item => item.id === Number(pinButton.dataset.openPin));
         if (pin) {
           onSelected?.(pin);
-          map.setView([pin.lat, pin.lng], Math.max(map.getZoom(), defaultZoom));
-          pin.marker.openPopup();
+          map.jumpTo({center: [pin.lng, pin.lat], zoom: Math.max(map.getZoom(), defaultZoom)});
+          if (!pin.marker.getPopup().isOpen()) pin.marker.togglePopup();
         }
       }
     });

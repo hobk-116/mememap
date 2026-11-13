@@ -28,5 +28,6 @@ class Regions:
     def map_config(self):
         return {"bounds": self.posting.leaflet(), "center": [20.9893, 105.7953],
                 "zoom": 18, "min_zoom": 11, "max_zoom": 19,
+                "style": "https://tiles.openfreemap.org/styles/liberty",
                 "tiles": {"url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                           "attribution": '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'}}

@@ -1,4 +1,5 @@
-/* Actual hit-testing across Leaflet panes and app controls, using disposable data. */
+const {mockMapStyle} = require('./map_fixture.cjs');
+/* Actual hit-testing across MapLibre panes and app controls, using disposable data. */
 const {chromium} = require('playwright');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -13,7 +14,7 @@ const path = require('node:path');
     for (const viewport of [{width:1280,height:850},{width:390,height:844}]) {
       const mobile = viewport.width <= 600;
       const context = await browser.newContext({viewport,hasTouch:mobile,isMobile:mobile});
-      await context.route('https://tile.openstreetmap.org/**', route => route.abort());
+      await mockMapStyle(context);
       await context.route('**/assets/js/map-layout.js', route => route.fulfill({contentType:'text/javascript',body:
         fs.readFileSync(path.join(__dirname,'../assets/js/map-layout.js'),'utf8') +
         '\nconst originalLayout=MemeMap.createMapLayout;MemeMap.createMapLayout=options=>{window.testMap=options.map;return originalLayout(options);};'}));
@@ -22,46 +23,48 @@ const path = require('node:path');
       page.on('pageerror', error=>errors.push(error.message));
       await page.goto(base+'/landing.html');
       await page.locator('#adminToggle:not([hidden])').waitFor();
-      await page.locator('.leaflet-marker-icon').first().waitFor();
+      await page.locator('.meme-map-marker').first().waitFor();
       await page.waitForTimeout(340);
       const box = () => page.locator('.fixed-pending-pin').boundingBox();
       const initial = await box();
-      await page.evaluate(()=>testMap.panBy([65,35],{animate:false}));
+      await page.evaluate(()=>testMap.panBy([65,35],{duration:0}));
       assert.deepEqual(await box(),initial,'Map panning keeps the fixed pin at its screen position');
-      await page.evaluate(()=>testMap.setZoom(17,{animate:false}));
+      await page.evaluate(()=>testMap.setZoom(16,{duration:0}));
       assert.deepEqual(await box(),initial,'Zoom reset keeps the fixed pin at its screen position');
       const animationDrift = await page.evaluate(async () => {
         const pin=document.querySelector('.fixed-pending-pin'),start=pin.getBoundingClientRect();
         let drift=0,recording=true;
         const record=()=>{const rect=pin.getBoundingClientRect();drift=Math.max(drift,Math.abs(rect.x-start.x),Math.abs(rect.y-start.y));
           if(recording)requestAnimationFrame(record);};requestAnimationFrame(record);
-        testMap.panBy([35,-20],{animate:true,duration:.18});
+        testMap.panBy([35,-20],{duration:180});
         await new Promise(resolve=>setTimeout(resolve,300));
-        testMap.setZoom(18,{animate:true});
+        testMap.zoomTo(17,{duration:250});
         await new Promise(resolve=>setTimeout(resolve,350));
         recording=false;return drift;
       });
       assert(animationDrift<1,'The fixed pin stays still throughout animated pan and zoom');
 
       const overlap = await page.evaluate(() => {
-        const pin=document.querySelector('.fixed-pending-pin'), marker=document.querySelector('.leaflet-marker-icon');
+        const pin=document.querySelector('.fixed-pending-pin'), marker=document.querySelector('.meme-map-marker');
         const rect=marker.getBoundingClientRect(), old={left:pin.style.left,top:pin.style.top};
         pin.style.left=`${rect.x+rect.width/2-21}px`;pin.style.top=`${rect.y+rect.height/2-21}px`;
         const hit=document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2);
         const wins=hit?.closest('.fixed-pending-pin')===pin;Object.assign(pin.style,old);return wins;
       });
       assert(overlap,'The fixed placement pin is above an existing map marker');
-      await page.locator('.leaflet-marker-icon').first().click();
-      await page.locator('.leaflet-popup').waitFor();
-      await page.waitForFunction(()=>Number(getComputedStyle(document.querySelector('.leaflet-popup')).opacity)>.99);
-      const popup = await page.locator('.leaflet-popup-content').boundingBox();
-      await page.locator('.fixed-pending-pin').evaluate((pin,rect)=>{
+      await page.locator('.meme-map-marker').first().click();
+      await page.locator('.maplibregl-popup').waitFor();
+      await page.waitForFunction(()=>Number(getComputedStyle(document.querySelector('.maplibregl-popup')).opacity)>.99);
+      // Measure and probe in one frame: MapLibre can reposition a popup between separate browser calls.
+      const popupWins = await page.evaluate(() => {
+        const rect = document.querySelector('.maplibregl-popup-content').getBoundingClientRect();
+        const pin = document.querySelector('.fixed-pending-pin');
         pin.style.left=`${rect.x+rect.width/2-21}px`;pin.style.top=`${rect.y+rect.height/2-21}px`;
-      },popup);
-      assert(await page.evaluate(({x,y,width,height})=>Boolean(document.elementFromPoint(x+width/2,y+height/2)?.closest('.leaflet-popup')),popup),
-        'A meme popup stays above the fixed pin where their content overlaps');
+        return Boolean(document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2)?.closest('.maplibregl-popup'));
+      });
+      assert(popupWins, 'A meme popup stays above the fixed pin where their content overlaps');
       await page.screenshot({path:`/private/tmp/mememap-popup-over-fixed-${viewport.width}.png`});
-      await page.evaluate(()=>testMap.closePopup());
+      await page.evaluate(()=>document.querySelector('.maplibregl-popup-close-button')?.click());
       for (const id of ['#profileButton','#topGuide','#toggle','#adminToggle']) {
         assert(await page.locator(id).evaluate(el=>{
           const pin=document.querySelector('.fixed-pending-pin'),rect=el.getBoundingClientRect();

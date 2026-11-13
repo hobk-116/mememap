@@ -1,0 +1,1 @@
+{"cleanUrls": true, "rewrites": [{"source": "/map", "destination": "/landing.html"}]}

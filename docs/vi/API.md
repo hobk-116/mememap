@@ -88,11 +88,14 @@ Bản đồ chỉ chấp nhận ghim trong vùng chữ nhật do backend quy đ�
   "zoom": 18,
   "min_zoom": 11,
   "max_zoom": 19,
+  "style": "https://tiles.openfreemap.org/styles/liberty",
   "tiles": {
     "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
     "attribution": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap contributors</a>"
   }
 }
 ```
+
+`style` là field bổ sung cho MapLibre; `tiles` được giữ cho client cũ, nhưng trang hiện tại không tải các tile raster đó. Tọa độ vẫn theo thứ tự vĩ độ/kinh độ. Giá trị zoom giữ thang tile 256 px cũ: client MapLibre trừ một từ `zoom`, `min_zoom` và `max_zoom` để dùng thang tile thế giới 512 px (zoom ban đầu 17). Xác thực, giới hạn đăng ghim và phạm vi Memerboard không đổi.
 
 `meme_count` và `aura` trong `/api/me` và `/api/profiles/{username}` là tổng từ toàn bộ ghim đang hiển thị của tác giả. Việc lọc ghim ở frontend không làm thay đổi các tổng này. Cấu hình map không cấp quyền truy cập hoặc xác định local/guest.

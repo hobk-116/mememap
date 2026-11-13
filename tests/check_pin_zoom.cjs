@@ -1,4 +1,5 @@
-/* Pin-list navigation with real Leaflet, using disposable fixture data only. */
+const {mockMapStyle} = require('./map_fixture.cjs');
+/* Pin-list navigation with real MapLibre, using disposable fixture data only. */
 const {chromium} = require('playwright');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -17,7 +18,7 @@ const path = require('node:path');
         const page = await context.newPage();
         const errors = [];
         page.on('pageerror', error => errors.push(error.message));
-        await page.route('https://tile.openstreetmap.org/**', route => route.abort());
+        await mockMapStyle(page);
         await page.route('**/assets/js/map-layout.js', route => route.fulfill({contentType: 'text/javascript', body:
           fs.readFileSync(path.join(__dirname, '../assets/js/map-layout.js'), 'utf8') +
           '\nconst originalLayout = MemeMap.createMapLayout; MemeMap.createMapLayout = options => { window.testMap = options.map; return originalLayout(options); };'}));
@@ -34,13 +35,13 @@ const path = require('node:path');
           // A different configured default detects any remaining hard-coded navigation zoom.
           await page.route('**/api/map-config', route => route.fulfill({json: {...originalConfig, zoom: defaultZoom}}));
           await page.goto(base + '/landing.html');
-          await page.waitForFunction(zoom => window.testMap?.getZoom() === zoom, defaultZoom);
+          await page.waitForFunction(zoom => window.testMap?.getZoom() === zoom, defaultZoom - 1);
           await page.locator('[data-open-pin="1"]').waitFor({state: 'visible'});
           await page.waitForTimeout(350);
-          for (const startZoom of [defaultZoom + 1, defaultZoom, defaultZoom - 1, originalConfig.min_zoom]) {
+          for (const startZoom of [defaultZoom, defaultZoom - 1, defaultZoom - 2, originalConfig.min_zoom - 1]) {
             await page.evaluate(zoom => {
-              testMap.closePopup();
-              testMap.setView([20.9913, 105.7973], zoom, {animate: false});
+              document.querySelector('.maplibregl-popup-close-button')?.click();
+              testMap.jumpTo({center: [105.7973, 20.9913], zoom});
             }, startZoom);
             if (viewport.width <= 600) {
               const sheet = await page.locator('#panel').boundingBox();
@@ -56,9 +57,9 @@ const path = require('node:path');
               await page.waitForTimeout(350);
             }
             await page.locator('[data-open-pin="1"]').click();
-            await page.locator('.leaflet-popup .pin-popup').waitFor({state: 'visible'});
-            const expectedZoom = startZoom > defaultZoom ? startZoom : defaultZoom;
-            await page.waitForFunction(zoom => testMap.getZoom() === zoom && !testMap._animatingZoom, expectedZoom);
+            await page.locator('.maplibregl-popup .pin-popup').waitFor({state: 'visible'});
+            const expectedZoom = Math.max(startZoom, defaultZoom - 1);
+            await page.waitForFunction(zoom => testMap.getZoom() === zoom && !testMap.isZooming(), expectedZoom);
             assert.equal(await page.evaluate(() => testMap.getZoom()), expectedZoom,
               `Pin-list zoom at ${viewport.width}px: configured ${defaultZoom}, starting ${startZoom}`);
             assert.equal(await page.locator('.pin-popup strong').textContent(), 'Fixture pin');

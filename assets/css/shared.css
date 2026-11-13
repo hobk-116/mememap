@@ -13,7 +13,7 @@
 
 @media(max-width:600px) {
   button,a,input,select,textarea,.top,.drawer-toggle-group,.toggle,.map-hint,
-  .popup-overlay,.popup-card,.leaflet-popup {
+  .popup-overlay,.popup-card,.maplibregl-popup {
     touch-action:manipulation
   }
 }

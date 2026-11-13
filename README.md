@@ -7,7 +7,7 @@ MemeMap is a bilingual (Vietnamese/English) community map for posting memes and 
 ## Project contents
 
 - `index.html` — landing, instructions, registration/login, and the signed-in user's profile.
-- `landing.html` — the interactive Leaflet map and its menus, pin composer, profiles, Memerboard, and admin dashboard.
+- `landing.html` — the interactive MapLibre GL JS map and its menus, pin composer, profiles, Memerboard, and admin dashboard.
 - `server.py` — HTTP adapter: routing, cookies, request parsing and responses.
 - `mememap/` — account, profile, pin and moderation services; configuration, migrations, media and geographical scopes.
 - `assets/` — bundled profile images and app icons. The UI uses `icon-128x.png`; the browser tab uses `icon-64x.png`. New accounts use the WebP default avatar; existing accounts may still refer to the PNG.
@@ -54,7 +54,7 @@ See [local operation](docs/en/RUNNING.md), [backups](docs/en/BACKUP.md) and [Clo
 - SQLite database: `mememap.sqlite3` in the repository root, created at first startup.
 - Uploaded media: `uploads/memes/` and `uploads/profiles/`, created as needed.
 - Both are runtime data and are ignored by Git. Back them up together; the database stores paths to uploaded files.
-- Map center, posting bounds and tiles are configured in `mememap/regions.py` and supplied to the frontend through authenticated `GET /api/map-config`. Leaderboard bounds are declared separately in the same module; see [architecture](docs/en/ARCHITECTURE.md).
+- Map center, posting bounds and OpenFreeMap style are configured in `mememap/regions.py` and supplied to the frontend through authenticated `GET /api/map-config`. Leaderboard bounds are declared separately in the same module; see [architecture](docs/en/ARCHITECTURE.md).
 - Restart the server after backend updates. Versioned migrations preserve existing data; back up the database and media together before upgrading. Runtime paths can be configured through the environment variables in the operations guide.
 
 ## Documentation
@@ -77,3 +77,7 @@ See [local operation](docs/en/RUNNING.md), [backups](docs/en/BACKUP.md) and [Clo
 ## Project status
 
 This is an actively evolving prototype. The current map and Memerboard support Hà Nội. The HTTP server is intentionally small and is not a hardened production application. Review the security and map-provider notes in the [deployment guide](docs/en/DEPLOYMENT.md) before exposing it beyond a trusted test environment.
+
+## Frontend-only showcase
+
+The Vercel showcase uses the same HTML/CSS UI with a browser-only data adapter in `assets/js/api.js`. User actions are stored in `sessionStorage` for the current browser tab. It is a visual/demo deployment and does not persist accounts, pins, votes or media on a server. Deploy the repository as a static Vercel project; no Python runtime or SQLite database is needed for this mode.

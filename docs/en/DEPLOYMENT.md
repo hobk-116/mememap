@@ -28,6 +28,6 @@ Before public launch, also complete a consistent [database/media backup and rest
 
 ## Map services
 
-The map page loads Leaflet from a CDN and requests standard raster tiles from OpenStreetMap's public tile service. The app does not download or host map tiles. Keep visible attribution and follow the tile service's current usage policy; for production or higher traffic, choose a provider/service whose terms and capacity match the project. Do not use the public tile endpoint for bulk tile downloads.
+The map page loads pinned MapLibre GL JS 6.13.0, CSS and worker from unpkg, and Liberty style/vector data from OpenFreeMap. Keep the attribution control visible; the data includes OpenStreetMap and OpenMapTiles attribution. Public browsers need access to those external services and WebGL. The app does not host or bulk-download tiles. A deployment CSP must permit the module/CSS, style/tile/glyph/sprite endpoints and Blob worker used by this CDN setup; if Blob workers are prohibited, deploy a reviewed same-origin worker configuration. Test real mobile browsers before release. See [MapLibre installation](https://maplibre.org/maplibre-gl-js/docs/) and [OpenFreeMap](https://openfreemap.org/quick_start/).
 
 The app currently requests geolocation only when the user activates the location control; the browser asks for permission. It does not continuously track a user. Pin coordinates are otherwise selected by map interaction. Pin lookup does not currently use a geocoding service.

@@ -1,0 +1,94 @@
+- generic [active] [ref=f1e1]:
+  - generic "MemeMap of Hanoi" [ref=f1e2]:
+    - generic:
+      - button "📍" [ref=f1e3] [cursor=pointer]
+      - button "+ Đặt ghim mới" [ref=f1e6] [cursor=pointer]: ＋
+    - generic:
+      - generic:
+        - generic [ref=f1e7]:
+          - button "Zoom in" [ref=f1e8] [cursor=pointer]: +
+          - button "Zoom out" [ref=f1e9] [cursor=pointer]: −
+        - generic [ref=f1e10]:
+          - link "Leaflet" [ref=f1e11] [cursor=pointer]:
+            - /url: https://leafletjs.com
+          - text: "| ©"
+          - link "OpenStreetMap contributors" [ref=f1e16] [cursor=pointer]:
+            - /url: https://www.openstreetmap.org/copyright
+  - banner:
+    - link "mememap" [ref=f1e17] [cursor=pointer]:
+      - /url: index.html
+    - generic [ref=f1e19]:
+      - button "Hướng dẫn" [ref=f1e20] [cursor=pointer]
+      - button "Switch to English" [ref=f1e21] [cursor=pointer]: 🇺🇸
+      - button "Hồ sơ người dùng" [ref=f1e22] [cursor=pointer]
+  - generic "Điều hướng bảng":
+    - button "Đóng menu" [expanded] [ref=f1e23] [cursor=pointer]:
+      - generic [aria-hidden] [ref=f1e24]: ←
+      - generic [ref=f1e25]: Menu
+  - button "Mở bảng quản trị" [ref=f1e26] [cursor=pointer]:
+    - generic [aria-hidden] [ref=f1e27]: ←
+    - generic [ref=f1e28]: Admin
+  - complementary [ref=f1e29]:
+    - generic [ref=f1e30]:
+      - generic [ref=f1e31]:
+        - generic [ref=f1e32]: Hà Nội
+        - heading "Chuyện quanh đây." [level=1] [ref=f1e33]
+        - generic [ref=f1e34]:
+          - searchbox "Tìm trong các ghim…" [ref=f1e35]
+          - button "Vị trí của tôi" [ref=f1e36] [cursor=pointer]: ◎
+      - generic [ref=f1e37]:
+        - generic [ref=f1e38]: Ghim trên bản đồ
+        - generic [ref=f1e39]: "01"
+      - article [ref=f1e41]:
+        - button "📍 Fixture pin @browser_other" [ref=f1e42] [cursor=pointer]:
+          - generic [ref=f1e43]: 📍
+          - generic [ref=f1e45]:
+            - strong [ref=f1e46]: Fixture pin
+            - text: "@browser_other"
+        - button "Quản lý meme" [ref=f1e47] [cursor=pointer]: ⋯
+        - generic [ref=f1e48]:
+          - generic [ref=f1e49]: "aura: 0"
+          - button "+aura" [ref=f1e50] [cursor=pointer]
+          - button "−aura" [ref=f1e51] [cursor=pointer]
+    - option "Hà Nội" [selected]
+    - button "Nông trại hào quang" [ref=f1e53] [cursor=pointer]
+  - complementary "Quản trị":
+    - generic:
+      - generic:
+        - generic: Quản trị · Hà Nội
+        - button "Lịch sử quản trị": ↶
+      - heading "Quản trị" [level=1]
+    - tablist "Mục quản trị":
+      - tab "Tổng quan" [selected]
+      - tab "Meme"
+      - tab "Báo cáo"
+      - tab "Người dùng"
+    - tabpanel "Tổng quan":
+      - generic:
+        - generic:
+          - generic:
+            - text: Khoảng thời gian
+            - combobox "Khoảng thời gian":
+              - option "24 giờ qua"
+              - option "7 ngày qua" [selected]
+              - option "30 ngày qua"
+          - button "Làm mới"
+      - generic:
+        - button "Báo cáo chờ xử lý 0":
+          - generic: Báo cáo chờ xử lý
+          - strong: "0"
+        - button "Cần xem xét 0":
+          - generic: Cần xem xét
+          - strong: "0"
+        - button "Meme mới 1":
+          - generic: Meme mới
+          - strong: "1"
+        - button "Người dùng mới 2":
+          - generic: Người dùng mới
+          - strong: "2"
+        - generic:
+          - generic: Dung lượng ảnh
+          - strong: 0 B
+      - heading "Cần xem xét" [level=2]
+      - generic: Chưa có dấu hiệu bất thường gần đây.
+  - button "Đặt ghim mới hoặc chạm vào bản đồ" [ref=f1e54] [cursor=pointer]

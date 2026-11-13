@@ -9,7 +9,7 @@
   const tapSurface = target => {
     if (innerWidth > 600 || !(target instanceof Element) ||
       target.closest('input,textarea,select,[contenteditable="true"]')) return null;
-    if (target.closest('#map') && !target.closest('.leaflet-popup,.fixed-pending-pin')) return null;
+    if (target.closest('#map') && !target.closest('.maplibregl-popup,.fixed-pending-pin')) return null;
     return target.closest('button,a') || target;
   };
   document.addEventListener('touchstart', event => {

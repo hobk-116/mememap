@@ -1,3 +1,4 @@
+const {mockMapStyle} = require('./map_fixture.cjs');
 /* Use only tests/serve_fixture.py: all accounts and mutations are disposable. */
 const {chromium} = require('playwright');
 const assert = require('node:assert/strict');
@@ -11,7 +12,7 @@ const assert = require('node:assert/strict');
   try {
     async function account(username) {
       const context = await browser.newContext({viewport:{width:1280,height:850}});
-      await context.route('https://tile.openstreetmap.org/**', route => route.abort());
+      await mockMapStyle(context);
       const response = await context.request.post(base + '/api/login', {data:{username,password:'browser-test-123'}});
       assert.equal(response.status(),200);
       const page = await context.newPage();
@@ -109,7 +110,7 @@ const assert = require('node:assert/strict');
     }
     await page.screenshot({path:'/tmp/mememap-admin-mobile.png'});
     const touchContext = await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,storageState:await admin.storageState()});
-    await touchContext.route('https://tile.openstreetmap.org/**',route=>route.abort());
+    await mockMapStyle(touchContext);
     const touchPage = await touchContext.newPage();
     touchPage.on('pageerror',error=>errors.push(error.message));
     await touchPage.goto(base + '/landing.html');

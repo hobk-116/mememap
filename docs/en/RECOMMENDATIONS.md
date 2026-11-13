@@ -34,9 +34,9 @@ Community membership/local/guest, administrative polygons, region-filtered feeds
 
 ## Map and mobile direction
 
-The current Leaflet/OSM raster setup is documented in [architecture](ARCHITECTURE.md) and [deployment](DEPLOYMENT.md#map-services). Community geography should be stored independently of the rendering library: use sourced/versioned boundaries, consistent IDs and backend validation.
+The current MapLibre/OpenFreeMap setup is documented in [architecture](ARCHITECTURE.md) and [deployment](DEPLOYMENT.md#map-services). Community geography should be stored independently of the rendering library: use sourced/versioned boundaries, consistent IDs and backend validation.
 
-Define the meaning of each community level before choosing polygons, viewport limits and feed filters. Retaining Leaflet or moving to another map provider/native SDK is a later technical choice; this document does not record that such a migration has been approved or completed.
+Define the meaning of each community level before choosing polygons, viewport limits and feed filters. The owner authorized the MapLibre/OpenFreeMap renderer migration on 07/10/2026. Community membership/polygon work and native SDK choices remain separate proposals; changing the renderer does not implement them.
 
 The earlier model and Admin design proposals are preserved in [history](history/MODEL_AND_ADMIN_NOTES.md). Current behavior is described by the API and architecture references.
 

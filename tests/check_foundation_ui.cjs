@@ -1,3 +1,4 @@
+const {mockMapStyle} = require('./map_fixture.cjs');
 /* Foundation contracts: partial feeds, profile refresh races, shared API errors and logout entry points. */
 const {chromium} = require('playwright');
 const assert = require('node:assert/strict');
@@ -8,7 +9,7 @@ const assert = require('node:assert/strict');
     ...(process.env.MEMEMAP_TEST_BROWSER ? {executablePath: process.env.MEMEMAP_TEST_BROWSER} : {})});
   try {
     const context = await browser.newContext({viewport: {width: 1280, height: 850}});
-    await context.route('https://tile.openstreetmap.org/**', route => route.abort());
+    await mockMapStyle(context);
     await context.request.post(base + '/api/login', {data: {username: 'browser_other', password: 'browser-test-123'}});
     for (const title of ['Additional profile pin', 'Another profile pin']) {
       assert.equal((await context.request.post(base + '/api/pins', {data: {title, lat: 20.9893, lng: 105.7953}})).status(), 201);

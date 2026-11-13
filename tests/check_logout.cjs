@@ -1,3 +1,4 @@
+const {mockMapStyle} = require('./map_fixture.cjs');
 /* Confirmation and session invalidation across pages, languages and viewport sizes. */
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
@@ -9,7 +10,7 @@ const assert=require('node:assert/strict');
   for(const width of [1280,390]) for(const lang of ['vi','en']) for(const pathname of ['/','/landing.html']) {
    const context=await browser.newContext({viewport:{width,height:850}});
    await context.addInitScript(language=>localStorage.setItem('mememap-language',language),lang);
-   await context.route('https://tile.openstreetmap.org/**',route=>route.abort());
+   await mockMapStyle(context);
    assert.equal((await context.request.post(base+'/api/login',{data:{username:'browser_admin',password:'browser-test-123'}})).status(),200);
    const page=await context.newPage(); let logoutRequests=0;
    page.on('request',request=>{if(request.url().endsWith('/api/logout')) logoutRequests++;});

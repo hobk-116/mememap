@@ -6,12 +6,63 @@
   const authRedirect = () => { location.href = '/?login=required'; };
   const api = MemeMap.createApiClient({onUnauthorized: authRedirect});
   const config = await api.request('/api/map-config');
-  const map = L.map('map', {zoomControl: false, minZoom: config.min_zoom, inertia: true,
-    inertiaDeceleration: 5000, inertiaMaxSpeed: 1600, easeLinearity: 0.25,
-    maxBounds: L.latLngBounds(config.bounds), maxBoundsViscosity: 1}).setView(config.center, config.zoom);
-  const zoomControl = L.control.zoom({position: innerWidth <= 600 ? 'topright' : 'bottomright'}).addTo(map);
-  L.tileLayer(config.tiles.url, {maxZoom: config.max_zoom, attribution: config.tiles.attribution}).addTo(map);
-  const pinIcon = L.divIcon({className: '', html: '<span class="pin-emoji"><span>📍</span></span>', iconSize: [40, 40], iconAnchor: [20, 38]});
+  const maplibregl = await import('https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs');
+  const stylesheet = document.querySelector('link[href$="/maplibre-gl.css"]');
+  // Failed CORS stylesheet requests can leave an empty sheet object in Chromium.
+  if (!stylesheet.sheet?.cssRules.length) await new Promise((resolve, reject) => {
+    const finish = error => {
+      clearTimeout(timeout);
+      stylesheet.removeEventListener('load', loaded);
+      stylesheet.removeEventListener('error', failed);
+      error ? reject(error) : resolve();
+    };
+    const loaded = () => finish();
+    const failed = () => finish(new Error('Map stylesheet unavailable'));
+    const timeout = setTimeout(failed, 10000);
+    stylesheet.addEventListener('load', loaded);
+    stylesheet.addEventListener('error', failed);
+  });
+  MemeMap.maplibregl = maplibregl;
+  // MapLibre's 512 px world tiles are twice Leaflet's 256 px tiles: z - 1 keeps the same scale.
+  const defaultZoom = config.zoom - 1;
+  const map = new maplibregl.Map({container: 'map', style: config.style,
+    center: [config.center[1], config.center[0]], zoom: defaultZoom,
+    minZoom: config.min_zoom - 1, maxZoom: config.max_zoom - 1,
+    maxBounds: config.bounds.map(([lat, lng]) => [lng, lat]),
+    renderWorldCopies: false, dragRotate: false, pitchWithRotate: false,
+    touchPitch: false, attributionControl: false});
+  map.touchZoomRotate.disableRotation();
+  map.addControl(new maplibregl.AttributionControl({compact: false}), 'bottom-right');
+  const zoomControl = new maplibregl.NavigationControl({showCompass: false});
+  map.addControl(zoomControl, innerWidth <= 600 ? 'top-right' : 'bottom-right');
+  const mapStatus = document.getElementById('mapStatus');
+  let mapFailed = false;
+  const showMapFailure = () => { mapFailed = true; mapStatus.hidden = false; mapStatus.textContent = tr('mapUnavailable'); };
+  map.on('error', showMapFailure);
+  map.getCanvas().addEventListener('webglcontextlost', showMapFailure);
+  map.getCanvas().addEventListener('webglcontextrestored', () => {
+    mapFailed = false; mapStatus.hidden = true;
+  });
+  map.on('load', () => { mapFailed = false; mapStatus.hidden = true; });
+  let activePopup = null;
+  MemeMap.createPinMarker = (location, content) => {
+    const element = document.createElement('div');
+    element.className = 'meme-map-marker';
+    element.tabIndex = 0; element.setAttribute('role', 'button');
+    element.innerHTML = '<span class="pin-emoji"><span>📍</span></span>';
+    const popup = new maplibregl.Popup({maxWidth: '300px', offset: [0, -38], focusAfterOpen: false}).setHTML(content);
+    element.setAttribute('aria-label', popup.getElement()?.querySelector('strong')?.textContent || tr('title'));
+    popup.on('open', () => { if (activePopup !== popup) activePopup?.remove(); activePopup = popup; });
+    popup.on('close', () => { if (activePopup === popup) activePopup = null; });
+    const marker = new maplibregl.Marker({element, anchor: 'top-left', offset: [-20, -38], subpixelPositioning: true})
+      .setLngLat(location).setPopup(popup).addTo(map);
+    element.addEventListener('click', event => { event.stopPropagation(); marker.togglePopup(); });
+    element.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); marker.togglePopup(); }
+    });
+    return marker;
+  };
+  const openPopup = marker => { if (marker && !marker.getPopup().isOpen()) marker.togglePopup(); };
   const panel = document.getElementById('panel');
   const adminPanel = document.getElementById('adminPanel');
   const adminToggle = document.getElementById('adminToggle');
@@ -48,7 +99,7 @@
   };
   profile = MemeMap.createMapProfile({api, tr, getLanguage: () => lang, onAccess: updateAdminAccess, authRedirect});
   leaderboard = MemeMap.createMapLeaderboard({api, tr, escapeHtml, onProfile: username => profile.open(username)});
-  pins = MemeMap.createMapPins({map, defaultZoom: config.zoom, pinIcon, api, tr, escapeHtml, restrictionMessage,
+  pins = MemeMap.createMapPins({map, defaultZoom, api, tr, escapeHtml, restrictionMessage,
     onSelected: () => {
       if (!layout.isMobile()) return;
       document.getElementById('search').blur();
@@ -59,8 +110,8 @@
     onChanged: refreshDependents,
     onManage: pin => { layout.setOpen('admin', true); adminDashboard.openPin(pin); },
     onReport: id => adminDashboard.reportPin(id), onProfile: username => profile.open(username)});
-  composer = MemeMap.createMapComposer({map, layout, api, tr, restrictionMessage,
-    onCreated: pin => pins.add(pin), onFocus: id => pins.marker(id)?.openPopup()});
+  composer = MemeMap.createMapComposer({map, defaultZoom, layout, api, tr, restrictionMessage,
+    onCreated: pin => pins.add(pin), onFocus: id => openPopup(pins.marker(id))});
   adminDashboard = MemeMap.createAdminDashboard({
     panel: adminPanel, apiClient: api,
     getLanguage: () => lang,
@@ -79,12 +130,13 @@
     onViewPin: pin => {
       adminPreview?.remove();
       adminPreview = null;
-      layout.focus(L.latLng(pin.lat, pin.lng), 18);
+      layout.focus({lat: pin.lat, lng: pin.lng}, defaultZoom);
       const marker = pins.marker(pin.id);
-      if (marker) marker.openPopup();
+      if (marker) openPopup(marker);
       else {
         const content = `<div class="pin-popup"><small>${escapeHtml(tr('hiddenPin'))}</small>${pin.image ? `<img class="popup-img" src="${escapeHtml(pin.image)}" alt="">` : ''}<strong>${escapeHtml(pin.title)}</strong><div class="popup-story">${escapeHtml(pin.story || '')}</div></div>`;
-        adminPreview = L.marker([pin.lat, pin.lng], {icon: pinIcon}).bindPopup(content).addTo(map).openPopup();
+        adminPreview = MemeMap.createPinMarker([pin.lng, pin.lat], content);
+        openPopup(adminPreview);
       }
     },
     onViewProfile: username => profile.open(username),
@@ -109,6 +161,7 @@
 
   function applyLanguage() {
     document.documentElement.lang = lang;
+    if (mapFailed) mapStatus.textContent = tr('mapUnavailable');
     document.querySelectorAll('[data-t]').forEach(el => { el.textContent = tr(el.dataset.t); });
     profile.render();
     adminDashboard.setLanguage();
@@ -149,10 +202,13 @@
     sessionStorage.removeItem('mememap-show-quick-guide');
     requestAnimationFrame(() => quickGuide.classList.add('open'));
   }
-  window.setInterval(() => {
+  const refreshTimer = window.setInterval(() => {
     if (!document.hidden) { pins.load(); if (panel.classList.contains('board-open')) leaderboard.load(); }
   }, 10_000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) pins.load(); });
+  window.addEventListener('pagehide', event => {
+    if (!event.persisted) { clearInterval(refreshTimer); map.remove(); }
+  });
   document.getElementById('lang').onclick = () => {
     lang = lang === 'vi' ? 'en' : 'vi';
     localStorage.setItem('mememap-language', lang);
@@ -182,6 +238,8 @@
     const language = localStorage.getItem('mememap-language') === 'en' ? 'en' : 'vi';
     document.getElementById('error').textContent = MemeMap.mapCopy[language].pinError;
     document.getElementById('list').textContent = MemeMap.mapCopy[language].pinError;
+    const status = document.getElementById('mapStatus');
+    status.hidden = false; status.textContent = MemeMap.mapCopy[language].mapUnavailable;
     console.error('Map initialization failed:', error);
   }
 });

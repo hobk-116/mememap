@@ -5,6 +5,16 @@ Vietnamese reference: [AGENTS_GUIDE_vi.md](docs/vi/AGENTS_GUIDE_vi.md). This roo
 - Until the project owner changes this decision, recommend Cloudflare Tunnel for publicly sharing the current prototype from a PC or VPS; do not recommend direct public exposure, router port forwarding, or DDNS hosting as the default, and use HTTPS publicly with HTTP allowed only between the tunnel and localhost.
 - Treat questions and capability checks (including “can you do this?” or “is this possible?”) as requests for information only; make changes only when the project owner explicitly asks you to do them.
 
+## Required reading and source of truth
+
+- At the start of a repository task, read [README.md](README.md), the [documentation index](docs/en/README.md), and the latest entries in [CHANGELOG.md](CHANGELOG.md).
+- Before changing code, read the relevant sections of [ARCHITECTURE.md](docs/en/ARCHITECTURE.md), [API.md](docs/en/API.md) when an API is involved, and [TESTING.md](docs/en/TESTING.md), together with the relevant source and tests. Read [RECOMMENDATIONS.md](docs/en/RECOMMENDATIONS.md) when the task affects product direction or community.
+- Read [VERSIONS.md](docs/en/history/VERSIONS.md) when tracing history or handling versioning. Do not treat historical behavior in VERSIONS or changelogs as a current requirement when it has been superseded.
+- Read RUNNING, DEPLOYMENT, BACKUP or GIT_WORKFLOW when relevant to the task. Reading every document is not required for every small edit.
+- Distinguish implemented behavior, settled decisions, proposals and unresolved decisions. Do not implement features from proposals, checklists or discussions that merely consider an option.
+- Follow the owner's current request and active AGENTS rules. When documentation and code conflict, report the difference rather than inventing product intent.
+- Do not assume access to other chats. If a necessary decision is absent from the repository and supplied context, ask the owner before carrying out work dependent on that decision.
+
 ## Verification policy
 
 When an implementation is explicitly requested, perform the appropriate checks as part of that work. Classify each change by actual impact and risk, then apply the module-count rule below. These levels describe changes, not permanent rankings of modules.

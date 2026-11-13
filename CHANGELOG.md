@@ -6,6 +6,44 @@ This log records completed project changes. `Unreleased` means the changes have 
 
 ## Unreleased
 
+### 11/10/2026
+
+#### Added
+
+- Recreated the current frontend/CSS as an editable [MemeMap Figma UI design](https://www.figma.com/design/G626nedcgIaChFIE61IZaA): separate Landing, Map and Components pages, desktop/mobile layouts, and mobile Menu, aura farm and minimum-sheet states. The file contains shared color/spacing variables, Nunito/DM Mono text styles, auto layout, reusable components and on-page mobile prototype links. Map backgrounds are separate raster assets; controls and content remain editable. Used disposable preview data and reviewed exported designs. This repository batch is L0, recording the external design link only; application source and behavior are unchanged, so application suites were not required or run.
+
+### 07/10/2026
+
+#### Changed
+
+- Fixed placement pin and the red pin shown on map touch while drawers are closed (`.fixed-pending-pin`, `.interactive-pending-pin`) now use dark red `#d62f1f` instead of light coral `--coral`; `--coral` is unchanged for other uses. Completed L1 in the map-layout module (CSS only); updated `docs/en|vi/ARCHITECTURE.md`. Verification: ran `python3 tests/run_browser.py check_interactive_pin.cjs check_map_layers.cjs check_browser.cjs` with external `NODE_PATH` and installed Chrome via `MEMEMAP_TEST_BROWSER`: all three suites passed using disposable data (an earlier run without those settings failed with `Cannot find module 'playwright'`). Backend/API suites were not required or run. Visual desktop/mobile screenshots were not separately reviewed, the color is not asserted by tests, and real iOS/Android coverage remains unverified.
+
+### 07/10/2026
+
+#### Fixed
+
+- Mobile placement hint and map attribution now follow the rendered sheet edge during dragging, snapping and Memerboard transitions, preventing transient overlap or excessive gaps. Added motion regression coverage with attribution; retained placement-pin geographic alignment. Completed L2 in the map-layout module; selected L2 verification passed. Ran `python3 tests/run_browser.py check_mobile_sheet_motion.cjs check_mobile_drawers.cjs check_mobile_levels.cjs check_mobile_sheet_ux.cjs check_interactive_pin.cjs check_pin_zoom.cjs check_map_layers.cjs` in two invocations, with external `NODE_PATH` and installed Chrome via `MEMEMAP_TEST_BROWSER`: all seven suites passed using disposable data. Reviewed desktop/mobile screenshots and ran JavaScript syntax checks plus `git diff --check`. The motion regression failed with the pre-fix layout supplied only to the test browser and passed with the fix. Initial execution required localhost sandbox approval and an installed-browser override; a motion attempt exposed the difference between animation-frame and before-paint sampling, so existing footer measurements retain their original timing while new gap measurements run after layout synchronization. No backend/API behavior changed; backend/API suites were not required or run. Real iOS/Android coverage remains unverified.
+
+### 07/10/2026
+
+#### Changed
+
+- Migrated the map on local `codex/maplibre-openfreemap` to native MapLibre GL JS 6.13.0 (pinned ESM/CSS/worker from unpkg) and the OpenFreeMap Liberty style, without a framework/build step. Retained green emoji pins, coral placement pin, popup content, desktop temporary selection marker, geographic anchor during drawer/sheet changes, mobile levels/sibling memory/Memerboard transitions, composer coordinates across viewport changes, Admin previews and feed refresh. Attribution now remains above mobile sheets and within the available desktop map area; the hint reserves its height without moving the placement pin.
+- Added `style` to authenticated `/api/map-config`; retained latitude/longitude, bounds, legacy zoom and `tiles` fields. The frontend converts coordinate order at the MapLibre boundary and subtracts one from legacy zoom values to preserve the 256 px Mercator pixel scale with MapLibre's 512 px world tiles. Posting/leaderboard scopes, permissions, database and uploads are unchanged.
+- Added bilingual map feedback for module/CSS/style/worker failures and WebGL context loss, keyboard marker activation, single-popup handling and page teardown. Updated browser checks to native coordinates/selectors, retaining behavioral assertions; added `check_maplibre.cjs` and deterministic OpenFreeMap style fixtures. Updated paired README, architecture, API, deployment, testing, recommendations and Git guidance, including the actual branch/remote and uncommitted migration status.
+
+Change and verification: completed L4 across map/layout, pin creation, feed/popup/voting, Admin preview, shared popup touch behavior and geographical map configuration. Ran `python3 -m unittest discover -s tests -p 'test_*.py' -v` (23 passed), `node tests/test_api_client.cjs` (passed), and `python3 tests/run_browser.py` (all 12 suites passed across full runs and affected reruns). The latest layout rerun selected `check_admin_ui.cjs check_browser.cjs check_interactive_pin.cjs check_map_layers.cjs check_mobile_drawers.cjs check_mobile_levels.cjs check_mobile_sheet_motion.cjs check_mobile_sheet_ux.cjs check_pin_zoom.cjs`; all passed after attribution placement changed. Independently reran `check_maplibre.cjs` after fixing Chromium's empty stylesheet object on blocked CSS; VI/EN module/CSS/style/worker/WebGL error and normal scale/keyboard cases passed. Earlier migration attempts exposed marker click/accessibility and test-geometry differences, which were corrected before these passes. Backend/API checks were not repeated after frontend-only corrections.
+
+Real-provider smoke `node /private/tmp/mememap_live_smoke.cjs` used disposable data, loaded OpenFreeMap on 1280 × 850 and 390 × 844 Chromium viewports, verified attribution and rendered features with no JavaScript errors; reviewed desktop/mobile screenshots. Reviewed resulting modules/routes, JavaScript syntax, local documentation links, EN/VI consistency and `git diff --check`. Tests use disposable databases/uploads; live user data was not exercised. Coverage is Chromium emulation; real iOS/Android WebGL/touch/keyboard/performance remains unverified. Migration files remain unstaged/uncommitted; no push, tag, release or second worktree was created. Pre-existing AGENTS/guide changes and `.playwright-cli/` were preserved.
+
+Gemini 3.1 Pro (`gemini-3.1-pro-high`, Antigravity plan mode) performed the owner-authorized read-only source/diff quality review after the checks, using parent-reported test results; it did not independently rerun application suites. It reported no blocking source finding and highlighted redundant closed-popup HTML updates. Confirmed and fixed that issue with per-marker content tracking, adding assertions for unchanged refresh and changed active vote. Ran `python3 tests/run_browser.py check_browser.cjs check_admin_ui.cjs check_map_layers.cjs check_pin_zoom.cjs check_foundation_ui.cjs`: browser/Admin/zoom/profile passed; one layering overlap probe failed. Its measurement and hit-test are now performed in the same browser frame, retaining the assertion; reran `python3 tests/run_browser.py check_map_layers.cjs` successfully, including actual z16→z17 zoom. Reviewed final syntax/diff/docs. Gemini's real-device cautions remain unverified, not test failures or release approval. Its temporary scratch diff was moved outside the repository.
+
+### 05/10/2026
+
+#### Changed
+
+- Added task-specific required reading and source-of-truth rules to AGENTS: current docs/source take precedence over superseded history; distinguish implemented behavior, settled decisions, proposals and unresolved decisions; do not assume access to other chats. Synchronized the Vietnamese guide.
+
 ### 04/10/2026
 
 #### Fixed
@@ -109,3 +147,9 @@ The exact dates of the following earlier changes are not recorded here:
 - Python annotations in the affected authentication, pin and media modules use deferred evaluation to avoid the reported import-time union-type error on older interpreters. This does not establish support for every Python version.
 
 Community memberships, local/guest permissions, geographical polygons, automatic backups, Turnstile and native Android/iOS apps are not completed features in this log.
+
+### 13/11/2026
+
+#### Added
+
+- Added a Vercel-ready frontend-only showcase mode. Authentication, pins, aura votes, profiles and avatar state are handled by a browser-local session store; no backend API or server database is required for the showcase.
